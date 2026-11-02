@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WFM Acarrion - Asesores</title>
+    <title>WFM Acarrion - Login Asesores</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -11,53 +11,60 @@
     </script>
 </head>
 <body class="bg-gray-100 font-sans p-4 flex items-center justify-center min-h-screen">
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark">
-        
+
+    <!-- VISTA 1: LOGIN -->
+    <div id="login-screen" class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark">
         <div class="text-center mb-6">
             <h1 class="text-3xl font-extrabold text-brand-dark tracking-tighter">carrión</h1>
-            <p class="text-brand-teal font-semibold tracking-[0.3em] text-xs">EDUCACIÓN SUPERIOR</p>
+            <p class="text-brand-teal font-semibold tracking-[0.3em] text-xs mb-6">EDUCACIÓN SUPERIOR</p>
+            <h2 class="text-xl font-bold text-gray-700">Portal del Asesor</h2>
         </div>
         
-        <div class="mb-5">
-            <label class="block text-gray-700 text-sm font-bold mb-2">Seleccionar Agente:</label>
-            <select id="agenteSelect" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50 font-medium">
-                <option value="">Cargando agentes...</option>
-            </select>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-1">Correo Institucional</label>
+                <input type="email" id="email" placeholder="ejemplo@acarrion.edu.pe" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-1">Contraseña</label>
+                <input type="password" id="password" placeholder="********" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50">
+            </div>
+            <button onclick="iniciarSesion()" id="btn-login" class="w-full bg-brand-dark hover:bg-brand-mid text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors shadow-sm">
+                Ingresar al Sistema
+            </button>
+            <p class="text-xs text-center text-gray-500 mt-4">Usa tu correo corporativo. Si no tienes cuenta, contacta al supervisor.</p>
+        </div>
+    </div>
+
+    <!-- VISTA 2: APP (Oculta por defecto) -->
+    <div id="app-screen" class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark hidden">
+        <div class="flex justify-between items-center mb-6 pb-4 border-b">
+            <div>
+                <p class="text-xs text-gray-500 font-bold uppercase">Bienvenido(a)</p>
+                <h1 class="text-lg font-extrabold text-brand-dark" id="nombre-agente">Cargando...</h1>
+            </div>
+            <button onclick="cerrarSesion()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1.5 rounded hover:bg-red-100 transition">Salir</button>
         </div>
 
-        <!-- SECCIÓN AUXILIARES (Cronometrados) -->
         <div class="mb-5">
             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Auxiliares (Pausas)</p>
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="registrarAuxiliar('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                    🚽 Baño
-                </button>
-                <button onclick="registrarAuxiliar('almuerzo')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                    🍽️ Almuerzo
-                </button>
-                <button onclick="registrarAuxiliar('capacitacion')" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                    📚 Capacitación
-                </button>
-                <button onclick="volverDeAuxiliar()" class="bg-brand-mid hover:bg-blue-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm border-2 border-brand-dark">
-                    ✅ Volver a laborar
-                </button>
+                <button onclick="registrarAuxiliar('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🚽 Baño</button>
+                <button onclick="registrarAuxiliar('almuerzo')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🍽️ Almuerzo</button>
+                <button onclick="registrarAuxiliar('capacitacion')" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">📚 Capacitación</button>
+                <button onclick="volverDeAuxiliar()" class="bg-brand-mid hover:bg-blue-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm border-2 border-brand-dark">✅ Volver</button>
             </div>
         </div>
 
-        <!-- SECCIÓN AUSENCIAS (Afectan el día) -->
         <div>
             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Eventos / Ausencias</p>
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="registrarAusencia('falta')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                    ❌ Falta
-                </button>
-                <button onclick="registrarAusencia('retiro')" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                    🏃 Retiro / Salud
-                </button>
+                <button onclick="registrarAusencia('falta')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">❌ Falta</button>
+                <button onclick="registrarAusencia('retiro')" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🏃 Retiro</button>
             </div>
         </div>
 
-        <div id="mensaje" class="mt-4 text-sm text-center font-bold text-green-600 hidden p-3 bg-green-50 rounded-lg border border-green-200"></div>
+        <div id="mensaje" class="mt-4 text-sm text-center font-bold text-green-700 hidden p-3 bg-green-50 rounded-lg border border-green-200"></div>
     </div>
 
     <script>
@@ -65,69 +72,112 @@
         const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s'; 
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function cargarAgentes() {
-            const { data, error } = await supabaseClient.from('agentes').select('id, nombre').order('nombre');
-            const select = document.getElementById('agenteSelect');
-            if (error) return console.error(error);
-            select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
-            data.forEach(agente => {
-                select.innerHTML += `<option value="${agente.id}">${agente.nombre}</option>`;
-            });
+        let agenteActualId = null;
+
+        // 1. Revisar si ya hay una sesión activa al cargar la página
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            if (session) mostrarApp(session.user);
+        });
+
+        // 2. Escuchar cambios de sesión (Login / Logout)
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+            if (session) mostrarApp(session.user);
+            else ocultarApp();
+        });
+
+        // 3. Función para Iniciar Sesión
+        async function iniciarSesion() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('btn-login');
+            
+            if (!email.endsWith('@acarrion.edu.pe')) return alert("Debes usar tu correo @acarrion.edu.pe");
+
+            btn.textContent = "Verificando...";
+            btn.disabled = true;
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            
+            btn.textContent = "Ingresar al Sistema";
+            btn.disabled = false;
+
+            if (error) alert("Error al ingresar: " + error.message);
+        }
+
+        // 4. Función para Cerrar Sesión
+        async function cerrarSesion() {
+            await supabaseClient.auth.signOut();
+        }
+
+        // 5. Mostrar la App una vez logueado
+        async function mostrarApp(user) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+
+            // Buscar el ID del agente usando su correo vinculado
+            const { data } = await supabaseClient.from('agentes').select('id, nombre').eq('user_id', user.id).single();
+            
+            if (data) {
+                agenteActualId = data.id;
+                document.getElementById('nombre-agente').textContent = data.nombre;
+            } else {
+                // Si el correo no está en la tabla agentes, lo tratamos como admin (para pruebas)
+                document.getElementById('nombre-agente').textContent = "Supervisor / Admin";
+            }
+        }
+
+        function ocultarApp() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
         }
 
         function mostrarMensaje(texto, color = "green") {
             const msgDiv = document.getElementById('mensaje');
             msgDiv.textContent = texto;
-            msgDiv.className = `mt-4 text-sm text-center font-bold text-${color}-700 hidden p-3 bg-${color}-50 rounded-lg border border-${color}-200`;
+            msgDiv.className = `mt-4 text-sm text-center font-bold text-${color}-700 p-3 bg-${color}-50 rounded-lg border border-${color}-200`;
             msgDiv.classList.remove('hidden');
             setTimeout(() => msgDiv.classList.add('hidden'), 3500);
         }
 
-        // Registrar pausas (baño, almuerzo, capacitación)
+        // 6. Registrar Pausas
         async function registrarAuxiliar(estado) {
-            const agenteId = document.getElementById('agenteSelect').value;
-            if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
+            if (!agenteActualId) return alert("No se encontró tu perfil de agente.");
 
-            // Validar que no tenga otra pausa abierta
-            const { data: activos } = await supabaseClient.from('status_events').select('id').eq('agente_id', agenteId).is('fin', null);
-            if (activos && activos.length > 0) return alert("Ya tienes una pausa activa. Debes marcar 'Volver a laborar' primero.");
+            const { data: activos } = await supabaseClient.from('status_events').select('id').eq('agente_id', agenteActualId).is('fin', null);
+            if (activos && activos.length > 0) return alert("Ya tienes una pausa activa. Debes marcar 'Volver' primero.");
 
-            const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteId, estado: estado }]);
+            const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteActualId, estado: estado }]);
             if (error) return alert("Error: " + error.message);
             mostrarMensaje(`Salida a ${estado.toUpperCase()} registrada`, "teal");
         }
 
-        // Volver de cualquier pausa
         async function volverDeAuxiliar() {
-            const agenteId = document.getElementById('agenteSelect').value;
-            if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
+            if (!agenteActualId) return;
 
             const { data: activos, error } = await supabaseClient
                 .from('status_events')
                 .update({ fin: new Date().toISOString() })
-                .eq('agente_id', agenteId)
+                .eq('agente_id', agenteActualId)
                 .is('fin', null)
                 .select();
 
             if (error) return alert("Error: " + error.message);
             if (activos.length === 0) return alert("No tienes ninguna pausa activa pendiente.");
-            
             mostrarMensaje("Regreso a laborar registrado", "blue");
         }
 
-        // Registrar faltas o retiros (ausencias)
+        // 7. Registrar Ausencias
         async function registrarAusencia(tipo) {
-            const agenteId = document.getElementById('agenteSelect').value;
-            if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
+            if (!agenteActualId) return;
 
             const fechaHoy = new Date().toISOString().split('T')[0];
-            const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteId, fecha: fechaHoy, tipo: tipo, motivo: 'Web App' }]);
+            const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteActualId, fecha: fechaHoy, tipo: tipo, motivo: 'Web App' }]);
             
             if (error) return alert("Error: " + error.message);
             mostrarMensaje(`Registro de ${tipo.toUpperCase()} guardado`, "red");
         }
-
-        cargarAgentes();
     </script>
 </body>
 </html>
