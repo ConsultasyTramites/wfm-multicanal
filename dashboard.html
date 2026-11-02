@@ -7,55 +7,54 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Configuración de colores de Tailwind (Puedes cambiarlos aquí)
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        brand: { 500: '#4F46E5', 600: '#4338CA' } // Color principal (Indigo)
+                        brand: { dark: '#001E54', mid: '#004F7A', teal: '#00A29F', light: '#E6F6F6' }
                     }
                 }
             }
         }
     </script>
-    <style>
-        /* Animación de pulso para el indicador en vivo */
-        .pulse-dot { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-    </style>
 </head>
-<body class="bg-gray-50 flex h-screen overflow-hidden font-sans">
+<body class="bg-gray-100 flex h-screen overflow-hidden font-sans">
 
-    <!-- BARRA LATERAL (Sidebar) -->
-    <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
-        <div class="h-16 flex items-center justify-center border-b border-gray-800">
-            <h1 class="text-xl font-bold tracking-wider">WFM <span class="text-brand-500">Acarrion</span></h1>
+    <!-- BARRA LATERAL -->
+    <aside class="w-64 bg-brand-dark text-white flex flex-col hidden md:flex shadow-xl z-20">
+        <!-- Logo -->
+        <div class="h-24 flex flex-col items-center justify-center border-b border-brand-mid">
+            <!-- Nota: Si subes tu logo como 'logo.png' a GitHub, descomenta la siguiente línea -->
+            <!-- <img src="logo.png" alt="Carrión" class="h-12 mb-1"> -->
+            <h1 class="text-3xl font-extrabold tracking-tighter text-white">carrión</h1>
+            <p class="text-brand-teal font-semibold tracking-[0.3em] text-[10px] mt-1">EDUCACIÓN SUPERIOR</p>
         </div>
+        
         <nav class="flex-1 px-4 py-6 space-y-2">
-            <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-gray-800 text-white rounded-lg transition-colors">
+            <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium">
                 📊 Dashboard
             </button>
-            <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors">
+            <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium">
                 👥 Personal
             </button>
-            <button onclick="cambiarPestana('reportes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors">
+            <button onclick="cambiarPestana('reportes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium">
                 📑 Reportes
             </button>
         </nav>
-        <div class="p-4 border-t border-gray-800 text-xs text-gray-500 text-center">
-            Sistema WFM v1.0
+        <div class="p-4 border-t border-brand-mid text-xs text-brand-teal text-center font-semibold">
+            Sistema WFM v1.1
         </div>
     </aside>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50">
         <!-- Cabecera -->
         <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
-            <h2 class="text-2xl font-semibold text-gray-800" id="titulo-pestana">Dashboard General</h2>
+            <h2 class="text-2xl font-bold text-brand-dark" id="titulo-pestana">Dashboard General</h2>
             <div class="flex items-center space-x-4">
-                <span class="text-sm text-gray-500" id="fecha-hoy"></span>
-                <div class="flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    <div class="w-2 h-2 bg-green-500 rounded-full pulse-dot"></div>
+                <span class="text-sm font-medium text-gray-500" id="fecha-hoy"></span>
+                <div class="flex items-center space-x-2 bg-brand-light text-brand-teal px-3 py-1.5 rounded-full text-xs font-bold border border-brand-teal/30">
+                    <div class="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></div>
                     <span>En Vivo</span>
                 </div>
             </div>
@@ -63,59 +62,74 @@
 
         <!-- VISTA 1: DASHBOARD -->
         <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
+            
             <!-- Tarjetas KPI -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-500">
-                    <p class="text-sm font-medium text-gray-500 mb-1">Total Agentes</p>
-                    <p class="text-3xl font-bold text-gray-800" id="kpi-total">0</p>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark">
+                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">Total Agentes</p>
+                    <p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
-                    <p class="text-sm font-medium text-gray-500 mb-1">Faltas Hoy</p>
-                    <p class="text-3xl font-bold text-red-600" id="kpi-faltas">0</p>
+                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">Faltas Hoy</p>
+                    <p class="text-4xl font-extrabold text-red-500" id="kpi-faltas">0</p>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
-                    <p class="text-sm font-medium text-gray-500 mb-1">En Baño / Break</p>
-                    <p class="text-3xl font-bold text-yellow-600" id="kpi-baños">0</p>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-teal">
+                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">En Baño / Break</p>
+                    <p class="text-4xl font-extrabold text-brand-teal" id="kpi-baños">0</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
-                    <p class="text-sm font-medium text-gray-500 mb-1">Disponibles</p>
-                    <p class="text-3xl font-bold text-green-600" id="kpi-disponibles">0</p>
+                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">Disponibles</p>
+                    <p class="text-4xl font-extrabold text-green-500" id="kpi-disponibles">0</p>
                 </div>
             </div>
 
-            <!-- Tabla de Actividad Reciente -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div class="px-6 py-4 border-b border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800">Últimos Registros (Hoy)</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Tabla de Actividad Reciente -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="text-lg font-bold text-brand-dark">Últimos Registros (Hoy)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-3">Agente</th>
+                                    <th class="px-6 py-3">Evento</th>
+                                    <th class="px-6 py-3">Hora</th>
+                                    <th class="px-6 py-3">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-registros">
+                                <!-- JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3">Agente</th>
-                                <th class="px-6 py-3">Evento</th>
-                                <th class="px-6 py-3">Hora</th>
-                                <th class="px-6 py-3">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-registros">
-                            <!-- Se llena con JS -->
-                        </tbody>
-                    </table>
+
+                <!-- NUEVO: Panel de Baños Activos -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-brand-teal/5">
+                        <h3 class="text-lg font-bold text-brand-teal flex items-center gap-2">
+                            ⏱️ En Baño Ahora
+                        </h3>
+                    </div>
+                    <div class="p-4 space-y-3" id="lista-baños">
+                        <p class="text-sm text-gray-400 text-center py-4">Nadie en el baño</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA 2: PERSONAL -->
+        <!-- VISTA 2: PERSONAL (Oculto por defecto) -->
         <div id="vista-personal" class="p-6 max-w-7xl mx-auto w-full hidden">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-lg font-semibold text-gray-800">Directorio de Agentes</h3>
-                    <input type="text" id="filtro-agentes" placeholder="Buscar por nombre o código..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none w-64">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 class="text-lg font-bold text-brand-dark">Directorio de Agentes</h3>
+                    <input type="text" id="filtro-agentes" placeholder="Buscar por nombre o código..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none w-64">
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
                             <tr>
                                 <th class="px-6 py-3">Código</th>
                                 <th class="px-6 py-3">Nombre</th>
@@ -124,109 +138,103 @@
                                 <th class="px-6 py-3">Correo</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-personal">
-                            <!-- Se llena con JS -->
-                        </tbody>
+                        <tbody id="tabla-personal"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA 3: REPORTES (Placeholder) -->
+        <!-- VISTA 3: REPORTES -->
         <div id="vista-reportes" class="p-6 max-w-7xl mx-auto w-full hidden">
             <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-                <p class="text-gray-400 text-lg">Módulo de Reportes en construcción...</p>
+                <p class="text-gray-400 text-lg font-medium">Módulo de Reportes en construcción...</p>
             </div>
         </div>
 
     </main>
 
     <script>
-        // --- CONFIGURACIÓN SUPABASE ---
         const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
         const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- FECHA ACTUAL ---
         const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-ES', opciones);
         const hoyStr = new Date().toISOString().split('T')[0];
 
-        // --- LÓGICA DE PESTAÑAS ---
         function cambiarPestana(pestana) {
-            // Ocultar todas
-            document.getElementById('vista-dashboard').classList.add('hidden');
-            document.getElementById('vista-personal').classList.add('hidden');
-            document.getElementById('vista-reportes').classList.add('hidden');
-            
-            // Mostrar la seleccionada
+            ['dashboard', 'personal', 'reportes'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
             document.getElementById(`vista-${pestana}`).classList.remove('hidden');
 
-            // Estilos de botones
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-gray-800', 'text-white');
-                btn.classList.add('text-gray-400', 'hover:bg-gray-800', 'hover:text-white');
+                btn.classList.remove('bg-brand-mid', 'text-white');
+                btn.classList.add('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
             });
-            event.target.classList.remove('text-gray-400', 'hover:bg-gray-800', 'hover:text-white');
-            event.target.classList.add('bg-gray-800', 'text-white');
+            event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
+            event.target.classList.add('bg-brand-mid', 'text-white');
 
-            // Cambiar título
             const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', reportes: 'Reportes' };
             document.getElementById('titulo-pestana').textContent = titulos[pestana];
             
-            // Si es personal, cargar tabla
             if (pestana === 'personal') cargarPersonal();
         }
 
-        // --- CARGAR KPIs DEL DASHBOARD ---
         async function cargarDashboard() {
-            // 1. Total Agentes
             const { count: total } = await supabaseClient.from('agentes').select('*', { count: 'exact', head: true });
             document.getElementById('kpi-total').textContent = total || 0;
 
-            // 2. Faltas hoy
             const { data: faltas } = await supabaseClient.from('ausencias').select('*').eq('fecha', hoyStr);
             document.getElementById('kpi-faltas').textContent = faltas ? faltas.length : 0;
 
-            // 3. Baños activos (sin hora de fin)
-            const { data: baños } = await supabaseClient.from('status_events').select('*').eq('estado', 'baño').is('fin', null);
+            const { data: baños } = await supabaseClient.from('status_events').select('*, agentes(nombre)').eq('estado', 'baño').is('fin', null).order('inicio', { ascending: true });
             document.getElementById('kpi-baños').textContent = baños ? baños.length : 0;
 
-            // 4. Calcular disponibles (Total - Faltas - Baños)
             const disponibles = (total || 0) - (faltas ? faltas.length : 0) - (baños ? baños.length : 0);
             document.getElementById('kpi-disponibles').textContent = disponibles;
 
-            // 5. Cargar últimos registros para la tabla
-            const { data: registros } = await supabaseClient
-                .from('ausencias')
-                .select(`id, tipo, created_at, agentes (nombre)`)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
+            // Tabla Últimos Registros
+            const { data: registros } = await supabaseClient.from('ausencias').select(`id, tipo, created_at, agentes (nombre)`).order('created_at', { ascending: false }).limit(5);
             const tabla = document.getElementById('tabla-registros');
             tabla.innerHTML = '';
-            
             if (registros && registros.length > 0) {
                 registros.forEach(reg => {
                     const hora = new Date(reg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                     tabla.innerHTML += `
-                        <tr class="bg-white border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 font-medium text-gray-900">${reg.agentes?.nombre || 'Desconocido'}</td>
-                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase">${reg.tipo}</span></td>
-                            <td class="px-6 py-4">${hora}</td>
-                            <td class="px-6 py-4"><span class="text-gray-500">Registrado</span></td>
-                        </tr>
-                    `;
+                        <tr class="bg-white border-b hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 font-bold text-brand-dark">${reg.agentes?.nombre || 'Desconocido'}</td>
+                            <td class="px-6 py-4"><span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wide">${reg.tipo}</span></td>
+                            <td class="px-6 py-4 font-medium">${hora}</td>
+                            <td class="px-6 py-4"><span class="text-gray-400 font-medium">Registrado</span></td>
+                        </tr>`;
                 });
             } else {
-                tabla.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center">No hay registros hoy</td></tr>';
+                tabla.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">No hay registros hoy</td></tr>';
+            }
+
+            // Panel de Baños (Cronómetro)
+            const listaBaños = document.getElementById('lista-baños');
+            listaBaños.innerHTML = '';
+            if (baños && baños.length > 0) {
+                baños.forEach(b => {
+                    const inicio = new Date(b.inicio);
+                    const ahora = new Date();
+                    const minutos = Math.floor((ahora - inicio) / 60000);
+                    const tiempoTexto = minutos === 0 ? "Hace unos segundos" : `Hace ${minutos} min`;
+                    const colorAlerta = minutos >= 15 ? 'text-red-600 bg-red-50 border-red-200' : 'text-brand-mid bg-brand-light border-brand-teal/30';
+
+                    listaBaños.innerHTML += `
+                        <div class="p-3 rounded-lg border ${colorAlerta} flex justify-between items-center transition-all">
+                            <span class="font-bold text-sm truncate pr-2">${b.agentes?.nombre}</span>
+                            <span class="text-xs font-extrabold whitespace-nowrap">${tiempoTexto}</span>
+                        </div>`;
+                });
+            } else {
+                listaBaños.innerHTML = '<p class="text-sm text-gray-400 text-center py-6 font-medium">Nadie en el baño ahora mismo ☕</p>';
             }
         }
 
-        // --- CARGAR TABLA DE PERSONAL ---
         let personalGlobal = [];
         async function cargarPersonal() {
-            const tabla = document.getElementById('tabla-personal');
             if (personalGlobal.length === 0) {
                 const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
                 personalGlobal = data || [];
@@ -239,41 +247,31 @@
             tabla.innerHTML = '';
             data.forEach(agente => {
                 tabla.innerHTML += `
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-mono text-xs">${agente.codigo || 'N/A'}</td>
-                        <td class="px-6 py-4 font-medium text-gray-900">${agente.nombre}</td>
-                        <td class="px-6 py-4 uppercase text-xs">${agente.canal_principal}</td>
-                        <td class="px-6 py-4 capitalize">${agente.nivel}</td>
-                        <td class="px-6 py-4 text-xs">${agente.email || '-'}</td>
-                    </tr>
-                `;
+                    <tr class="bg-white border-b hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td>
+                        <td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td>
+                        <td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td>
+                        <td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">${agente.email || '-'}</td>
+                    </tr>`;
             });
         }
 
-        // Filtro de búsqueda de personal
         document.getElementById('filtro-agentes').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
-            const filtrados = personalGlobal.filter(a => 
-                a.nombre.toLowerCase().includes(term) || 
-                (a.codigo && a.codigo.toLowerCase().includes(term))
-            );
-            renderizarPersonal(filtrados);
+            renderizarPersonal(personalGlobal.filter(a => a.nombre.toLowerCase().includes(term) || (a.codigo && a.codigo.toLowerCase().includes(term))));
         });
 
-        // --- INICIALIZAR Y SUSCRIPCIÓN EN TIEMPO REAL ---
+        // Inicializar
         cargarDashboard();
+        
+        // Refrescar el cronómetro cada minuto automáticamente
+        setInterval(() => { cargarDashboard(); }, 60000);
 
-        // Escuchar cambios en ausencias y status_events para actualizar el dashboard en vivo
-        supabaseClient
-            .channel('schema-db-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'ausencias' }, payload => {
-                cargarDashboard(); // Recargar los datos cuando haya una nueva falta
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'status_events' }, payload => {
-                cargarDashboard(); // Recargar cuando alguien entre o salga del baño
-            })
-            .subscribe()
-
+        supabaseClient.channel('schema-db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ausencias' }, () => cargarDashboard())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'status_events' }, () => cargarDashboard())
+            .subscribe();
     </script>
 </body>
 </html>
