@@ -268,7 +268,7 @@
                     tabla.innerHTML += `
                         <tr class="bg-white border-b hover:bg-gray-50">
                             <td class="px-6 py-4 font-bold text-brand-dark">${h.agentes?.nombre}</td>
-                            <td class="px-6 py-4 font-mono font-medium">${h.hora_inicio} - ${h.hora_fin}</td>
+                            <td class="px-6 py-4 font-mono font-medium">${h.hora_inicio.substring(0,5)} - ${h.hora_fin.substring(0,5)}</td>
                             <td class="px-6 py-4"><span class="${colorCanal} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${h.canal}</span></td>
                             <td class="px-6 py-4"><button onclick="eliminarHorario('${h.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">Eliminar</button></td>
                         </tr>`;
