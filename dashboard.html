@@ -189,7 +189,7 @@
         </div>
     </div>
 
-    <!-- 👇 NUEVO MODAL PARA EDITAR AGENTE 👇 -->
+    <!-- MODAL PARA EDITAR AGENTE -->
     <div id="modal-editar-agente" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
@@ -532,11 +532,10 @@
             }
         }
 
+        // 👇 CORRECCIÓN 1: Eliminado el "if (personalGlobal.length === 0)" para forzar recarga limpia 👇
         async function cargarPersonal() {
-            if (personalGlobal.length === 0) {
-                const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
-                personalGlobal = data || [];
-            }
+            const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
+            personalGlobal = data || [];
             renderPersonal(personalGlobal);
         }
 
@@ -596,6 +595,7 @@
             else if (nivel === 'junior') inputFactor.value = 0.8;
         }
 
+        // 👇 CORRECCIÓN 2: Ahora avisa si falla y fuerza recarga desde la BD 👇
         async function guardarEdicionAgente() {
             if (!agenteEditandoId) return;
             
@@ -609,15 +609,13 @@
                 factor_productividad: factor
             }).eq('id', agenteEditandoId);
 
-            if (error) return alert("Error al guardar: " + error.message);
+            if (error) {
+                return alert("❌ Error al guardar en Supabase: " + error.message);
+            }
 
-            // Actualizar localmente para no recargar toda la BD
-            const index = personalGlobal.findIndex(a => a.id === agenteEditandoId);
-            personalGlobal[index].nivel = nivel;
-            personalGlobal[index].canal_principal = canal;
-            personalGlobal[index].factor_productividad = factor;
-
-            renderPersonal(personalGlobal);
+            alert("✅ Cambios guardados correctamente");
+            personalGlobal = []; // Limpiamos la memoria local
+            await cargarPersonal(); // Volvemos a pedir los datos a la BD
             cerrarModalEditarAgente();
         }
 
