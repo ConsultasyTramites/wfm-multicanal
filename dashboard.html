@@ -86,11 +86,8 @@
             <!-- VISTA HORARIOS -->
             <div id="vista-horarios" class="p-6 max-w-7xl mx-auto w-full hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Formulario Individual -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-bold text-brand-dark">Asignar Turno (Individual)</h3>
-                        </div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-brand-dark">Asignar Turno (Individual)</h3></div>
                         <div class="space-y-4">
                             <div><label class="block text-xs font-bold text-gray-500 mb-1">Agente</label><select id="horario-agente" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></select></div>
                             <div><label class="block text-xs font-bold text-gray-500 mb-1">Fecha</label><input type="date" id="horario-fecha" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></div>
@@ -103,21 +100,20 @@
                             <div id="mensaje-horario" class="text-xs text-center font-bold text-green-600 hidden"></div>
                         </div>
                     </div>
-
-                    <!-- Tabla de Turnos -->
                     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
                         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center flex-wrap gap-2">
                             <h3 class="text-lg font-bold text-brand-dark">Turnos Asignados</h3>
                             <div class="flex items-center gap-2">
-                                <!-- BOTÓN MASIVO -->
                                 <button onclick="abrirModalMasivo()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">⚡ Asignación Masiva</button>
+                                <!-- NUEVO BOTÓN EXPORTAR HORARIOS -->
+                                <button onclick="descargarCSV('tabla-horarios', 'Horarios')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
                                 <input type="date" id="filtro-fecha" class="border rounded-lg px-3 py-1.5 text-sm bg-white" onchange="cargarHorariosDelDia()">
                             </div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left text-gray-500">
+                            <table id="tabla-horarios" class="w-full text-sm text-left text-gray-500">
                                 <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Horario</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Acción</th></tr></thead>
-                                <tbody id="tabla-horarios"></tbody>
+                                <tbody></tbody>
                             </table>
                         </div>
                     </div>
@@ -137,13 +133,15 @@
                             <input type="date" id="fecha-cobertura" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarCobertura()">
                             <button onclick="abrirModalMetas()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm">⚙️ Configurar Metas</button>
                             <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600 shadow-sm">Actualizar</button>
+                            <!-- NUEVO BOTÓN EXPORTAR COBERTURA -->
+                            <button onclick="descargarCSV('tabla-cobertura', 'Cobertura')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
                         </div>
                     </div>
                     
                     <div class="overflow-x-auto p-4">
                         <table class="w-full text-sm text-center text-gray-600 border-collapse">
                             <thead>
-                                <tr class="bg-brand-dark text-white">
+                                <tr class="bg-brand-dark text-white" id="thead-cobertura">
                                     <th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>
                                 </tr>
                             </thead>
@@ -178,6 +176,10 @@
             </div>
         </main>
     </div>
+
+    <!-- MODALES (Metas, Editar Agente, Masivo) -->
+    <!-- ... (Mismo código de modales que ya tienes, no es necesario repetirlo aquí) ... -->
+    <!-- Para no hacer el mensaje eterno, asumo que mantienes los modales, solo asegúrate de que las funciones JS correspondan) -->
 
     <!-- MODAL PARA CONFIGURAR METAS -->
     <div id="modal-metas" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
@@ -214,7 +216,7 @@
         </div>
     </div>
 
-    <!-- 👇 NUEVO MODAL PARA ASIGNACIÓN MASIVA 👇 -->
+    <!-- MODAL PARA ASIGNACIÓN MASIVA -->
     <div id="modal-masivo" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-brand-dark text-white rounded-t-xl">
@@ -222,19 +224,13 @@
                 <button onclick="cerrarModalMasivo()" class="text-gray-300 hover:text-white font-bold text-xl">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-5">
-                
-                <!-- Selección de Agentes -->
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-xs font-bold text-gray-500 uppercase">1. Seleccionar Agentes</label>
                         <button onclick="seleccionarTodosAgentes()" class="text-xs text-brand-teal font-bold hover:underline">Seleccionar Todos / Quitar Todos</button>
                     </div>
-                    <div id="lista-checkbox-agentes" class="h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50 grid grid-cols-2 md:grid-cols-3 gap-2">
-                        <!-- JS llena esto -->
-                    </div>
+                    <div id="lista-checkbox-agentes" class="h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50 grid grid-cols-2 md:grid-cols-3 gap-2"></div>
                 </div>
-
-                <!-- Fechas y Horas -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">2. Rango de Fechas</label>
@@ -250,25 +246,10 @@
                         </label>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Inicio</label>
-                        <input type="time" id="masivo-hora-inicio" class="w-full border rounded-lg p-2 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Fin</label>
-                        <input type="time" id="masivo-hora-fin" class="w-full border rounded-lg p-2 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Canal</label>
-                        <select id="masivo-canal" class="w-full border rounded-lg p-2 text-sm bg-white">
-                            <option value="ccvox">CCVOX (Voz)</option>
-                            <option value="pchat">PCHAT (Telegram)</option>
-                            <option value="correo">Correo (Trámites)</option>
-                            <option value="multicanal">Multicanal</option>
-                        </select>
-                    </div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Inicio</label><input type="time" id="masivo-hora-inicio" class="w-full border rounded-lg p-2 text-sm bg-white"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Fin</label><input type="time" id="masivo-hora-fin" class="w-full border rounded-lg p-2 text-sm bg-white"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Canal</label><select id="masivo-canal" class="w-full border rounded-lg p-2 text-sm bg-white"><option value="ccvox">CCVOX (Voz)</option><option value="pchat">PCHAT (Telegram)</option><option value="correo">Correo (Trámites)</option><option value="multicanal">Multicanal</option></select></div>
                 </div>
             </div>
             <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end gap-3">
@@ -279,6 +260,7 @@
     </div>
 
     <script>
+        // ... (Todo tu código JS de conexión y lógica existente) ...
         const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
         const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -306,7 +288,6 @@
         async function verificarAdmin(user) {
             const { data, error } = await supabaseClient.from('agentes').select('is_admin').eq('email', user.email.toLowerCase());
             if (error) { alert("Error al verificar permisos: " + error.message); return; }
-
             if (data && data.length > 0 && data[0].is_admin === true) {
                 isAdmin = true;
                 document.getElementById('login-screen').classList.add('hidden');
@@ -338,440 +319,40 @@
             if (pestana === 'cobertura') cargarCobertura();
         }
 
-        // --- LÓGICA DE HORARIOS ---
-        async function cargarSelectores() {
-            const { data } = await supabaseClient.from('agentes').select('id, nombre').order('nombre');
-            listaAgentesGlobal = data || [];
-            const select = document.getElementById('horario-agente');
-            select.innerHTML = '<option value="">Seleccione...</option>';
-            listaAgentesGlobal.forEach(a => { select.innerHTML += `<option value="${a.id}">${a.nombre}</option>`; });
+        // ... (Funciones de Horarios, Cobertura, Metas, Masivas, Personal, etc.) ...
+        // (Asegúrate de mantener todo el código que ya tenías aquí, solo agrega la función descargarCSV al final)
 
-            const hoy = new Date().toISOString().split('T')[0];
-            document.getElementById('horario-fecha').value = hoy;
-            document.getElementById('filtro-fecha').value = hoy;
-            document.getElementById('fecha-cobertura').value = hoy;
-        }
-
-        async function guardarHorario() {
-            const agente_id = document.getElementById('horario-agente').value;
-            const fecha = document.getElementById('horario-fecha').value;
-            const hora_inicio = document.getElementById('horario-inicio').value;
-            const hora_fin = document.getElementById('horario-fin').value;
-            const canal = document.getElementById('horario-canal').value;
-            const msg = document.getElementById('mensaje-horario');
-
-            if(!agente_id || !fecha || !hora_inicio || !hora_fin) return alert("Llena todos los campos por favor.");
-
-            const { error } = await supabaseClient.from('plan_diario').insert([{ agente_id, fecha, hora_inicio, hora_fin, canal, tipo: 'turno' }]);
-
-            if (error) return alert("Error: " + error.message);
-
-            msg.textContent = "Turno guardado correctamente ✅";
-            msg.classList.remove('hidden');
-            setTimeout(() => msg.classList.add('hidden'), 3000);
+        // --- NUEVA FUNCIÓN PARA EXPORTAR A CSV/EXCEL ---
+        function descargarCSV(idTabla, nombreArchivo) {
+            const tabla = document.getElementById(idTabla);
+            if (!tabla) return;
             
-            document.getElementById('horario-inicio').value = '';
-            document.getElementById('horario-fin').value = '';
-            cargarHorariosDelDia();
-        }
-
-        async function cargarHorariosDelDia() {
-            const fechaFiltro = document.getElementById('filtro-fecha').value;
-            const tabla = document.getElementById('tabla-horarios');
+            let filas = tabla.querySelectorAll("tr");
+            let csvContent = "";
             
-            const { data } = await supabaseClient.from('plan_diario')
-                .select('id, hora_inicio, hora_fin, canal, agentes(nombre, factor_productividad)')
-                .eq('fecha', fechaFiltro)
-                .order('hora_inicio');
-            
-            tabla.innerHTML = '';
-            if (data && data.length > 0) {
-                data.forEach(h => {
-                    let colorCanal = h.canal === 'ccvox' ? 'bg-blue-100 text-blue-800' : (h.canal === 'pchat' ? 'bg-teal-100 text-teal-800' : 'bg-purple-100 text-purple-800');
-                    let factor = h.agentes?.factor_productividad || 1.0;
-                    tabla.innerHTML += `
-                        <tr class="bg-white border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 font-bold text-brand-dark">${h.agentes?.nombre} <span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-1">F: ${factor}</span></td>
-                            <td class="px-6 py-4 font-mono font-medium">${h.hora_inicio.substring(0,5)} - ${h.hora_fin.substring(0,5)}</td>
-                            <td class="px-6 py-4"><span class="${colorCanal} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${h.canal}</span></td>
-                            <td class="px-6 py-4"><button onclick="eliminarHorario('${h.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">Eliminar</button></td>
-                        </tr>`;
+            filas.forEach(fila => {
+                let celdas = fila.querySelectorAll("td, th");
+                let datosFila = [];
+                celdas.forEach(celda => {
+                    // Limpiamos el texto de saltos de línea o comillas dobles
+                    let texto = celda.innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""').trim();
+                    datosFila.push(`"${texto}"`);
                 });
-            } else {
-                tabla.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">No hay turnos asignados para esta fecha</td></tr>';
-            }
-        }
-
-        async function eliminarHorario(id) {
-            if(!confirm("¿Seguro que deseas eliminar este turno?")) return;
-            await supabaseClient.from('plan_diario').delete().eq('id', id);
-            cargarHorariosDelDia();
-        }
-
-        // --- 👇 LÓGICA DE ASIGNACIÓN MASIVA 👇 ---
-        function abrirModalMasivo() {
-            const modal = document.getElementById('modal-masivo');
-            const contenedor = document.getElementById('lista-checkbox-agentes');
-            
-            // Llenar la lista de checkboxes
-            contenedor.innerHTML = '';
-            listaAgentesGlobal.forEach(a => {
-                contenedor.innerHTML += `
-                    <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="checkbox" value="${a.id}" class="checkbox-agente w-4 h-4 text-brand-teal rounded focus:ring-brand-teal">
-                        <span class="truncate">${a.nombre}</span>
-                    </label>
-                `;
+                csvContent += datosFila.join(";") + "\n";
             });
 
-            // Poner fechas por defecto (hoy y en 5 días)
-            const hoy = new Date();
-            const en5Dias = new Date();
-            en5Dias.setDate(hoy.getDate() + 5);
-            
-            document.getElementById('masivo-fecha-inicio').value = hoy.toISOString().split('T')[0];
-            document.getElementById('masivo-fecha-fin').value = en5Dias.toISOString().split('T')[0];
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            // Añadimos el BOM para que Excel reconozca los acentos (UTF-8)
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${nombreArchivo}_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        function cerrarModalMasivo() {
-            document.getElementById('modal-masivo').classList.add('hidden');
-            document.getElementById('modal-masivo').classList.remove('flex');
-        }
-
-        function seleccionarTodosAgentes() {
-            const checkboxes = document.querySelectorAll('.checkbox-agente');
-            const todosSeleccionados = Array.from(checkboxes).every(c => c.checked);
-            checkboxes.forEach(c => c.checked = !todosSeleccionados);
-        }
-
-        async function guardarAsignacionMasiva() {
-            const btn = document.getElementById('btn-guardar-masivo');
-            const checkboxes = document.querySelectorAll('.checkbox-agente:checked');
-            
-            if (checkboxes.length === 0) return alert("Debes seleccionar al menos un agente.");
-            
-            const agentesIds = Array.from(checkboxes).map(c => c.value);
-            const fechaInicioStr = document.getElementById('masivo-fecha-inicio').value;
-            const fechaFinStr = document.getElementById('masivo-fecha-fin').value;
-            const horaInicio = document.getElementById('masivo-hora-inicio').value;
-            const horaFin = document.getElementById('masivo-hora-fin').value;
-            const canal = document.getElementById('masivo-canal').value;
-            const omitirFines = document.getElementById('masivo-omitir-fines').checked;
-
-            if (!fechaInicioStr || !fechaFinStr || !horaInicio || !horaFin) return alert("Llena todos los campos de fecha y hora.");
-
-            const fechaInicio = new Date(fechaInicioStr + 'T00:00:00');
-            const fechaFin = new Date(fechaFinStr + 'T00:00:00');
-            let payload = [];
-
-            // Iterar sobre el rango de fechas
-            for (let d = new Date(fechaInicio); d <= fechaFin; d.setDate(d.getDate() + 1)) {
-                const diaSemana = d.getDay(); // 0 = Domingo, 6 = Sábado
-                
-                if (omitirFines && (diaSemana === 0 || diaSemana === 6)) continue; // Saltar fines de semana
-
-                const fechaStr = d.toISOString().split('T')[0];
-
-                // Iterar sobre los agentes seleccionados
-                agentesIds.forEach(agenteId => {
-                    payload.push({
-                        agente_id: agenteId,
-                        fecha: fechaStr,
-                        hora_inicio: horaInicio,
-                        hora_fin: horaFin,
-                        canal: canal,
-                        tipo: 'turno'
-                    });
-                });
-            }
-
-            if (payload.length === 0) return alert("No se generaron turnos (revisa las fechas o los fines de semana).");
-
-            btn.textContent = "Guardando...";
-            btn.disabled = true;
-
-            // Insertar todo de golpe en Supabase
-            const { error } = await supabaseClient.from('plan_diario').insert(payload);
-
-            btn.textContent = "Generar Turnos";
-            btn.disabled = false;
-
-            if (error) {
-                return alert("Error al guardar en masa: " + error.message);
-            }
-
-            alert(`✅ ¡Éxito! Se generaron ${payload.length} turnos.`);
-            cerrarModalMasivo();
-            cargarHorariosDelDia(); // Refrescar la tabla
-        }
-
-        // --- LÓGICA DE COBERTURA VS METAS CON PRODUCTIVIDAD ---
-        let metasGlobales = {}; 
-
-        async function cargarCobertura() {
-            const fecha = document.getElementById('fecha-cobertura').value;
-            const tabla = document.getElementById('tabla-cobertura');
-            const thead = document.querySelector('#vista-cobertura thead tr');
-
-            thead.innerHTML = `<th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>`;
-            horasMostrar.forEach(h => {
-                thead.innerHTML += `<th class="px-2 py-2 border-r border-brand-mid bg-brand-mid text-xs">${h.toString().padStart(2, '0')}:00</th>`;
-            });
-            thead.innerHTML += `<th class="px-2 py-2 bg-brand-dark text-xs">Total Req</th>`;
-
-            const { data: turnos } = await supabaseClient.from('plan_diario').select('*, agentes(factor_productividad)').eq('fecha', fecha);
-            const { data: ausencias } = await supabaseClient.from('ausencias').select('agente_id').eq('fecha', fecha);
-            const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
-            
-            if (!turnos || turnos.length === 0) {
-                tabla.innerHTML = '<tr><td colspan="18" class="px-6 py-8 text-center text-gray-400 font-bold">No hay turnos programados para esta fecha</td></tr>';
-                return;
-            }
-
-            const agentesAusentes = new Set(ausencias ? ausencias.map(a => a.agente_id) : []);
-            const parseTime = (timeStr) => {
-                const [h, m] = timeStr.split(':').map(Number);
-                return h * 60 + m;
-            };
-
-            tabla.innerHTML = '';
-
-            canales.forEach(canal => {
-                let filaHTML = `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-3 text-left font-bold text-brand-dark sticky left-0 bg-white border-r uppercase">${canal}</td>`;
-                let totalReqCanal = 0;
-
-                horasMostrar.forEach(hora => {
-                    const horaInicioMin = hora * 60;
-                    
-                    const agentesEnHora = turnos.filter(t => {
-                        if (t.canal !== canal) return false;
-                        if (agentesAusentes.has(t.agente_id)) return false;
-                        const tInicio = parseTime(t.hora_inicio);
-                        const tFin = parseTime(t.hora_fin);
-                        return tInicio <= horaInicioMin && tFin > horaInicioMin;
-                    });
-
-                    let capacidadEfectiva = 0;
-                    agentesEnHora.forEach(t => { capacidadEfectiva += (t.agentes?.factor_productividad || 1.0); });
-                    capacidadEfectiva = Math.round(capacidadEfectiva * 10) / 10;
-
-                    const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
-                    const req = reqObj ? reqObj.agentes_requeridos : 0;
-                    totalReqCanal += req;
-
-                    let bgClass = 'bg-white';
-                    let textClass = 'text-gray-400';
-                    let displayText = `<span class="opacity-30">-</span>`;
-
-                    if (req > 0) {
-                        if (capacidadEfectiva >= req) {
-                            bgClass = 'bg-green-100'; textClass = 'text-green-800 font-bold';
-                            displayText = `${capacidadEfectiva} <span class="text-[10px] opacity-70">/ ${req}</span>`;
-                        } else {
-                            bgClass = 'bg-red-200'; textClass = 'text-red-800 font-bold';
-                            displayText = `<span class="text-red-600 font-extrabold">${capacidadEfectiva}</span> <span class="text-[10px] opacity-70">/ ${req}</span>`;
-                        }
-                    } else if (capacidadEfectiva > 0) {
-                        textClass = 'text-gray-800 font-bold';
-                        displayText = `${capacidadEfectiva} <span class="text-[10px] text-gray-400 font-normal">/ 0</span>`;
-                    }
-
-                    filaHTML += `<td class="px-2 py-3 text-center border-r ${bgClass} ${textClass}">${displayText}</td>`;
-                });
-
-                filaHTML += `<td class="px-2 py-3 text-center font-extrabold text-brand-teal bg-brand-light">${totalReqCanal}</td></tr>`;
-                tabla.innerHTML += filaHTML;
-            });
-        }
-
-        // --- MODAL DE CONFIGURACIÓN DE METAS ---
-        async function abrirModalMetas() {
-            const fecha = document.getElementById('fecha-cobertura').value;
-            const modal = document.getElementById('modal-metas');
-            const contenedor = document.getElementById('contenedor-inputs-metas');
-            
-            const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
-            metasGlobales = {};
-            
-            contenedor.innerHTML = '<p class="text-center text-gray-500 py-4">Cargando metas...</p>';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            let htmlTabla = `<table class="w-full text-xs text-center border-collapse">
-                <thead><tr class="bg-gray-100"><th class="p-2 border text-left">Canal</th>`;
-            horasMostrar.forEach(h => htmlTabla += `<th class="p-1 border">${h}:00</th>`);
-            htmlTabla += `</tr></thead><tbody>`;
-
-            canales.forEach(canal => {
-                htmlTabla += `<tr><td class="p-2 border font-bold bg-gray-50 text-left uppercase">${canal}</td>`;
-                horasMostrar.forEach(hora => {
-                    const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
-                    const val = reqObj ? reqObj.agentes_requeridos : 0;
-                    metasGlobales[`${canal}-${hora}`] = val;
-                    htmlTabla += `<td class="p-1 border"><input type="number" min="0" max="50" value="${val}" class="w-10 text-center border rounded p-1 text-xs focus:ring-1 focus:ring-brand-teal focus:outline-none" onchange="metasGlobales['${canal}-${hora}'] = parseInt(this.value) || 0"></td>`;
-                });
-                htmlTabla += `</tr>`;
-            });
-            htmlTabla += `</tbody></table>`;
-            contenedor.innerHTML = htmlTabla;
-        }
-
-        function cerrarModalMetas() {
-            document.getElementById('modal-metas').classList.add('hidden');
-            document.getElementById('modal-metas').classList.remove('flex');
-        }
-
-        async function guardarMetas() {
-            const fecha = document.getElementById('fecha-cobertura').value;
-            let datosGuardar = [];
-            for (const [key, val] of Object.entries(metasGlobales)) {
-                if (val > 0) {
-                    const [canal, hora] = key.split('-');
-                    datosGuardar.push({ fecha: fecha, canal: canal, hora: parseInt(hora), agentes_requeridos: val });
-                }
-            }
-            await supabaseClient.from('requerimiento_cobertura').delete().eq('fecha', fecha);
-            if (datosGuardar.length > 0) {
-                const { error } = await supabaseClient.from('requerimiento_cobertura').insert(datosGuardar);
-                if (error) return alert("Error al guardar metas: " + error.message);
-            }
-            cerrarModalMetas();
-            cargarCobertura();
-        }
-
-        // --- LÓGICA DEL DASHBOARD Y PERSONAL ---
-        const hoyStr = new Date().toISOString().split('T')[0];
-
-        async function cargarDashboard() {
-            if (!isAdmin) return;
-            const { count: total } = await supabaseClient.from('agentes').select('*', { count: 'exact', head: true });
-            document.getElementById('kpi-total').textContent = total || 0;
-            const { data: ausencias } = await supabaseClient.from('ausencias').select('*').eq('fecha', hoyStr);
-            document.getElementById('kpi-ausencias').textContent = ausencias ? ausencias.length : 0;
-            const { data: activos } = await supabaseClient.from('status_events').select('*, agentes(nombre)').is('fin', null).order('inicio', { ascending: true });
-            document.getElementById('kpi-auxiliares').textContent = activos ? activos.length : 0;
-            const disponibles = (total || 0) - (ausencias ? ausencias.length : 0) - (activos ? activos.length : 0);
-            document.getElementById('kpi-disponibles').textContent = disponibles < 0 ? 0 : disponibles;
-
-            const { data: registros } = await supabaseClient.from('ausencias').select(`id, tipo, created_at, agentes (nombre)`).order('created_at', { ascending: false }).limit(5);
-            const tabla = document.getElementById('tabla-registros');
-            tabla.innerHTML = registros && registros.length > 0 ? '' : '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No hay registros hoy</td></tr>';
-            if(registros) {
-                registros.forEach(reg => {
-                    const hora = new Date(reg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                    let color = reg.tipo === 'falta' ? 'bg-red-100 text-red-700' : (reg.tipo === 'retiro' ? 'bg-gray-200 text-gray-800' : 'bg-purple-100 text-purple-700');
-                    tabla.innerHTML += `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-6 py-4 font-bold text-brand-dark">${reg.agentes?.nombre}</td><td class="px-6 py-4"><span class="${color} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${reg.tipo}</span></td><td class="px-6 py-4 font-medium">${hora}</td></tr>`;
-                });
-            }
-            const listaAux = document.getElementById('lista-auxiliares');
-            listaAux.innerHTML = '';
-            if (activos && activos.length > 0) {
-                activos.forEach(a => {
-                    const minutos = Math.floor((new Date() - new Date(a.inicio)) / 60000);
-                    let icono = a.estado === 'baño' ? '🚽' : (a.estado === 'almuerzo' ? '🍽️' : '📚');
-                    let limite = a.estado === 'baño' ? 15 : (a.estado === 'almuerzo' ? 45 : 60);
-                    let style = minutos >= limite ? 'text-red-700 bg-red-50 border-red-300' : 'text-brand-dark bg-gray-50 border-gray-200';
-                    listaAux.innerHTML += `<div class="p-3 rounded-lg border ${style} flex justify-between items-center"><div class="flex flex-col"><span class="font-bold text-sm truncate">${a.agentes?.nombre}</span><span class="text-[10px] uppercase font-bold opacity-70">${icono} ${a.estado}</span></div><span class="text-xs font-extrabold whitespace-nowrap">${minutos} min</span></div>`;
-                });
-            } else {
-                listaAux.innerHTML = '<p class="text-sm text-gray-400 text-center py-6 font-medium">Todos en línea ✨</p>';
-            }
-        }
-
-        async function cargarPersonal() {
-            const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
-            personalGlobal = data || [];
-            renderPersonal(personalGlobal);
-        }
-
-        function renderPersonal(data) {
-            const tabla = document.getElementById('tabla-personal');
-            tabla.innerHTML = '';
-            data.forEach(agente => {
-                let factor = agente.factor_productividad || 1.0;
-                let colorFactor = factor >= 1.1 ? 'bg-green-100 text-green-800' : (factor <= 0.9 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800');
-                
-                tabla.innerHTML += `
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td>
-                        <td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td>
-                        <td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td>
-                        <td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td>
-                        <td class="px-6 py-4"><span class="${colorFactor} text-xs font-bold px-2 py-1 rounded">${factor}</span></td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="abrirModalEditarAgente('${agente.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded transition text-sm font-bold">
-                                ✏️ Editar
-                            </button>
-                        </td>
-                    </tr>`;
-            });
-        }
-
-        document.getElementById('filtro-agentes').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            renderPersonal(personalGlobal.filter(a => a.nombre.toLowerCase().includes(term) || (a.codigo && a.codigo.toLowerCase().includes(term))));
-        });
-
-        // --- LÓGICA PARA EDITAR AGENTE ---
-        function abrirModalEditarAgente(id) {
-            agenteEditandoId = id;
-            const agente = personalGlobal.find(a => a.id === id);
-            
-            document.getElementById('edit-nombre').value = agente.nombre;
-            document.getElementById('edit-canal').value = agente.canal_principal;
-            document.getElementById('edit-nivel').value = agente.nivel;
-            document.getElementById('edit-factor').value = agente.factor_productividad || 1.0;
-
-            document.getElementById('modal-editar-agente').classList.remove('hidden');
-            document.getElementById('modal-editar-agente').classList.add('flex');
-        }
-
-        function cerrarModalEditarAgente() {
-            document.getElementById('modal-editar-agente').classList.add('hidden');
-            document.getElementById('modal-editar-agente').classList.remove('flex');
-            agenteEditandoId = null;
-        }
-
-        function actualizarFactorAuto() {
-            const nivel = document.getElementById('edit-nivel').value;
-            const inputFactor = document.getElementById('edit-factor');
-            if (nivel === 'senior') inputFactor.value = 1.2;
-            else if (nivel === 'semi') inputFactor.value = 1.0;
-            else if (nivel === 'junior') inputFactor.value = 0.8;
-        }
-
-        async function guardarEdicionAgente() {
-            if (!agenteEditandoId) return;
-            
-            const nivel = document.getElementById('edit-nivel').value;
-            const canal = document.getElementById('edit-canal').value;
-            const factor = parseFloat(document.getElementById('edit-factor').value);
-
-            const { error } = await supabaseClient.from('agentes').update({
-                nivel: nivel,
-                canal_principal: canal,
-                factor_productividad: factor
-            }).eq('id', agenteEditandoId);
-
-            if (error) return alert("❌ Error al guardar: " + error.message);
-
-            alert("✅ Cambios guardados correctamente");
-            personalGlobal = []; 
-            await cargarPersonal(); 
-            cerrarModalEditarAgente();
-        }
-
-        function iniciarDashboard() {
-            cargarDashboard();
-            setInterval(cargarDashboard, 60000);
-            supabaseClient.channel('schema-db-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'ausencias' }, () => cargarDashboard())
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'status_events' }, () => cargarDashboard())
-                .subscribe();
-        }
+        // ... (Función iniciarDashboard y demás que ya tenías) ...
     </script>
 </body>
 </html>
