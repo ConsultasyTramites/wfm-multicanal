@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WFM Multicanal - Dashboard</title>
+    <!-- Tailwind CSS para diseño responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 font-sans p-4">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-blue-600 mb-4 text-center">WFM Acarrion</h1>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">Seleccionar Agente:</label>
+            <select id="agenteSelect" class="w-full border rounded p-2 text-sm">
+                <option value="">Cargando agentes...</option>
+            </select>
+        </div>
+
+        <div class="flex space-x-2 mb-6">
+            <button onclick="registrarEvento('baño')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded w-1/2 text-sm">
+                🚽 Ir al Baño
+            </button>
+            <button onclick="registrarEvento('falta')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded w-1/2 text-sm">
+                ❌ Registrar Falta
+            </button>
+        </div>
+
+        <div id="mensaje" class="text-sm text-center font-bold text-green-600 hidden"></div>
+    </div>
+
+    <script>
+        // Conectamos con Supabase usando tu URL y tu Llave Pública (Publishable)
+        const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
+        const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s'; // Tu llave pública
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 1. Cargar los agentes al abrir la página
+        async function cargarAgentes() {
+            const { data, error } = await supabase.from('agentes').select('id, nombre, codigo').order('nombre');
+            const select = document.getElementById('agenteSelect');
+            
+            if (error) {
+                console.error('Error:', error);
+                select.innerHTML = '<option>Error al cargar</option>';
+                return;
+            }
+
+            select.innerHTML = '<option value="">-- Seleccione un agente --</option>';
+            data.forEach(agente => {
+                select.innerHTML += `<option value="${agente.id}" data-nombre="${agente.nombre}">${agente.nombre}</option>`;
+            });
+        }
+
+        // 2. Función para enviar el evento a la base de datos
+        async function registrarEvento(tipo) {
+            const select = document.getElementById('agenteSelect');
+            const agenteId = select.value;
+            const agenteNombre = select.options[select.selectedIndex].getAttribute('data-nombre');
+
+            if (!agenteId) {
+                alert("Por favor, selecciona un agente primero.");
+                return;
+            }
+
+            const fechaHoy = new Date().toISOString().split('T')[0];
+
+            if (tipo === 'falta') {
+                // Insertar en tabla ausencias
+                const { error } = await supabase.from('ausencias').insert([
+                    { agente_id: agenteId, fecha: fechaHoy, tipo: 'falta', motivo: 'Registrado desde Web App' }
+                ]);
+                if (error) return alert("Error al guardar: " + error.message);
+            } else if (tipo === 'baño') {
+                // Insertar en status_events
+                const { error } = await supabase.from('status_events').insert([
+                    { agente_id: agenteId, estado: 'baño' }
+                ]);
+                if (error) return alert("Error al guardar: " + error.message);
+            }
+
+            // Mostrar mensaje de éxito
+            const msgDiv = document.getElementById('mensaje');
+            msgDiv.textContent = `✅ Registro de ${tipo} guardado para ${agenteNombre}`;
+            msgDiv.classList.remove('hidden');
+            setTimeout(() => msgDiv.classList.add('hidden'), 3000);
+        }
+
+        // Iniciar
+        cargarAgentes();
+    </script>
+</body>
+</html>
