@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - WFM Acarrion</title>
+    <title>Dashboard - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -12,113 +12,148 @@
 </head>
 <body class="bg-gray-100 flex h-screen overflow-hidden font-sans">
 
-    <aside class="w-64 bg-brand-dark text-white flex flex-col hidden md:flex shadow-xl z-20">
-        <div class="h-24 flex flex-col items-center justify-center border-b border-brand-mid">
-            <h1 class="text-3xl font-extrabold tracking-tighter text-white">carrión</h1>
-            <p class="text-brand-teal font-semibold tracking-[0.3em] text-[10px] mt-1">EDUCACIÓN SUPERIOR</p>
+    <!-- PANTALLA DE LOGIN PARA ADMIN -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border-t-8 border-brand-dark">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-extrabold text-brand-dark tracking-tighter">carrión</h1>
+                <p class="text-brand-teal font-semibold tracking-[0.3em] text-xs mb-4">EDUCACIÓN SUPERIOR</p>
+                <h2 class="text-xl font-bold text-gray-700">Acceso Supervisores</h2>
+            </div>
+            <div class="space-y-4">
+                <input type="email" id="admin-email" placeholder="Correo de Supervisor" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal bg-gray-50">
+                <input type="password" id="admin-pass" placeholder="Contraseña" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal bg-gray-50">
+                <button onclick="loginAdmin()" class="w-full bg-brand-dark hover:bg-brand-mid text-white font-bold py-3 rounded-lg text-sm transition-colors">Ingresar</button>
+                <div id="login-error" class="text-red-500 text-sm text-center hidden font-bold"></div>
+            </div>
         </div>
-        <nav class="flex-1 px-4 py-6 space-y-2">
-            <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium">📊 Dashboard</button>
-            <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium">👥 Personal</button>
-            <button onclick="cambiarPestana('reportes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium">📑 Reportes</button>
-        </nav>
-    </aside>
+    </div>
 
-    <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50">
-        <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
-            <h2 class="text-2xl font-bold text-brand-dark" id="titulo-pestana">Dashboard General</h2>
-            <div class="flex items-center space-x-4">
-                <span class="text-sm font-medium text-gray-500" id="fecha-hoy"></span>
-                <div class="flex items-center space-x-2 bg-brand-light text-brand-teal px-3 py-1.5 rounded-full text-xs font-bold border border-brand-teal/30">
-                    <div class="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></div>
-                    <span>En Vivo</span>
+    <!-- APP (Oculta hasta loguearse) -->
+    <div id="app-screen" class="w-full flex h-screen hidden">
+        <aside class="w-64 bg-brand-dark text-white flex flex-col shadow-xl z-20">
+            <div class="h-24 flex flex-col items-center justify-center border-b border-brand-mid">
+                <h1 class="text-3xl font-extrabold tracking-tighter text-white">carrión</h1>
+                <p class="text-brand-teal font-semibold tracking-[0.3em] text-[10px] mt-1">EDUCACIÓN SUPERIOR</p>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium">📊 Dashboard</button>
+                <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium">👥 Personal</button>
+            </nav>
+            <div class="p-4 border-t border-brand-mid">
+                <button onclick="cerrarSesionAdmin()" class="w-full text-xs font-bold text-red-300 hover:text-white bg-red-900/30 py-2 rounded">Cerrar Sesión</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50">
+            <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
+                <h2 class="text-2xl font-bold text-brand-dark" id="titulo-pestana">Dashboard General</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm font-medium text-gray-500" id="fecha-hoy"></span>
+                    <div class="flex items-center space-x-2 bg-brand-light text-brand-teal px-3 py-1.5 rounded-full text-xs font-bold border border-brand-teal/30">
+                        <div class="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></div>
+                        <span>En Vivo</span>
+                    </div>
+                </div>
+            </header>
+
+            <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Total Agentes</p><p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Ausencias Hoy</p><p class="text-4xl font-extrabold text-red-500" id="kpi-ausencias">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-400"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">En Auxiliar</p><p class="text-4xl font-extrabold text-orange-400" id="kpi-auxiliares">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Disponibles</p><p class="text-4xl font-extrabold text-green-500" id="kpi-disponibles">0</p></div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="px-6 py-4 border-b bg-gray-50/50"><h3 class="text-lg font-bold text-brand-dark">Últimos Registros</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Evento</th><th class="px-6 py-3">Hora</th></tr></thead>
+                                <tbody id="tabla-registros"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                        <div class="px-6 py-4 border-b bg-orange-50/50"><h3 class="text-lg font-bold text-orange-600">⏱️ Auxiliares Activos</h3></div>
+                        <div class="p-4 space-y-3 overflow-y-auto flex-1" id="lista-auxiliares"></div>
+                    </div>
                 </div>
             </div>
-        </header>
 
-        <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark">
-                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">Total Agentes</p>
-                    <p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
-                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">Ausencias Hoy</p>
-                    <p class="text-4xl font-extrabold text-red-500" id="kpi-ausencias">0</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-400">
-                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">En Auxiliar</p>
-                    <p class="text-4xl font-extrabold text-orange-400" id="kpi-auxiliares">0</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
-                    <p class="text-sm font-bold text-gray-400 mb-1 uppercase tracking-wider">Disponibles</p>
-                    <p class="text-4xl font-extrabold text-green-500" id="kpi-disponibles">0</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                        <h3 class="text-lg font-bold text-brand-dark">Últimos Registros (Hoy)</h3>
+            <div id="vista-personal" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-brand-dark">Directorio de Agentes</h3>
+                        <input type="text" id="filtro-agentes" placeholder="Buscar..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-teal w-64">
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
-                                <tr>
-                                    <th class="px-6 py-3">Agente</th>
-                                    <th class="px-6 py-3">Evento</th>
-                                    <th class="px-6 py-3">Hora</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-registros"></tbody>
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Nivel</th><th class="px-6 py-3">Correo</th></tr></thead>
+                            <tbody id="tabla-personal"></tbody>
                         </table>
                     </div>
                 </div>
-
-                <!-- PANEL DE AUXILIARES ACTIVOS -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-orange-50/50 flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-orange-600 flex items-center gap-2">⏱️ Auxiliares Activos</h3>
-                        <span class="text-xs font-bold text-gray-400">(Baño/Almuerzo/Cap.)</span>
-                    </div>
-                    <div class="p-4 space-y-3 overflow-y-auto flex-1" id="lista-auxiliares">
-                        <p class="text-sm text-gray-400 text-center py-4">Nadie fuera de línea</p>
-                    </div>
-                </div>
             </div>
-        </div>
-
-        <!-- VISTAS OCULTAS -->
-        <div id="vista-personal" class="p-6 max-w-7xl mx-auto w-full hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 class="text-lg font-bold text-brand-dark">Directorio de Agentes</h3>
-                    <input type="text" id="filtro-agentes" placeholder="Buscar..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none w-64">
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
-                            <tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Nivel</th></tr>
-                        </thead>
-                        <tbody id="tabla-personal"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div id="vista-reportes" class="p-6 hidden"><p class="text-center text-gray-400">En construcción</p></div>
-    </main>
+        </main>
+    </div>
 
     <script>
         const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
         const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+        let isAdmin = false;
+
+        // 1. Verificar Sesión al cargar
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            if (session) verificarAdmin(session.user);
+        });
+
+        // 2. Login
+        async function loginAdmin() {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            const err = document.getElementById('login-error');
+            err.classList.add('hidden');
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+            if (error) {
+                err.textContent = "Credenciales incorrectas";
+                err.classList.remove('hidden');
+                return;
+            }
+            verificarAdmin(data.user);
+        }
+
+        // 3. Verificar si el usuario es Admin
+        async function verificarAdmin(user) {
+            const { data } = await supabaseClient.from('agentes').select('is_admin, nombre').eq('user_id', user.id).single();
+            
+            if (data && data.is_admin === true) {
+                isAdmin = true;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                iniciarDashboard();
+            } else {
+                alert("Acceso denegado. No eres supervisor.");
+                supabaseClient.auth.signOut();
+            }
+        }
+
+        async function cerrarSesionAdmin() {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        }
+
+        // --- LÓGICA DEL DASHBOARD ---
         const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-ES', opciones);
         const hoyStr = new Date().toISOString().split('T')[0];
 
         function cambiarPestana(pestana) {
-            ['dashboard', 'personal', 'reportes'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
+            ['dashboard', 'personal'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
             document.getElementById(`vista-${pestana}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('bg-brand-mid', 'text-white');
@@ -126,26 +161,25 @@
             });
             event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
             event.target.classList.add('bg-brand-mid', 'text-white');
-            document.getElementById('titulo-pestana').textContent = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', reportes: 'Reportes' }[pestana];
+            document.getElementById('titulo-pestana').textContent = { dashboard: 'Dashboard General', personal: 'Gestión de Personal' }[pestana];
             if (pestana === 'personal') cargarPersonal();
         }
 
         async function cargarDashboard() {
+            if (!isAdmin) return;
+
             const { count: total } = await supabaseClient.from('agentes').select('*', { count: 'exact', head: true });
             document.getElementById('kpi-total').textContent = total || 0;
 
-            // Ausencias (Faltas + Retiros)
             const { data: ausencias } = await supabaseClient.from('ausencias').select('*').eq('fecha', hoyStr);
             document.getElementById('kpi-ausencias').textContent = ausencias ? ausencias.length : 0;
 
-            // Auxiliares Activos (Cualquier status sin fin)
             const { data: activos } = await supabaseClient.from('status_events').select('*, agentes(nombre)').is('fin', null).order('inicio', { ascending: true });
             document.getElementById('kpi-auxiliares').textContent = activos ? activos.length : 0;
 
             const disponibles = (total || 0) - (ausencias ? ausencias.length : 0) - (activos ? activos.length : 0);
             document.getElementById('kpi-disponibles').textContent = disponibles < 0 ? 0 : disponibles;
 
-            // Tabla Historial
             const { data: registros } = await supabaseClient.from('ausencias').select(`id, tipo, created_at, agentes (nombre)`).order('created_at', { ascending: false }).limit(5);
             const tabla = document.getElementById('tabla-registros');
             tabla.innerHTML = registros && registros.length > 0 ? '' : '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No hay registros hoy</td></tr>';
@@ -163,20 +197,16 @@
                 });
             }
 
-            // Panel de Auxiliares (Cronómetro inteligente)
             const listaAux = document.getElementById('lista-auxiliares');
             listaAux.innerHTML = '';
             if (activos && activos.length > 0) {
                 activos.forEach(a => {
                     const minutos = Math.floor((new Date() - new Date(a.inicio)) / 60000);
                     let icono = a.estado === 'baño' ? '🚽' : (a.estado === 'almuerzo' ? '🍽️' : '📚');
-                    
-                    // Lógica de colores: Baño > 15m (Rojo), Almuerzo > 45m (Rojo), Capacitación > 60m (Rojo)
                     let limite = a.estado === 'baño' ? 15 : (a.estado === 'almuerzo' ? 45 : 60);
                     let style = minutos >= limite ? 'text-red-700 bg-red-50 border-red-300' : 'text-brand-dark bg-gray-50 border-gray-200';
-
                     listaAux.innerHTML += `
-                        <div class="p-3 rounded-lg border ${style} flex justify-between items-center transition-all">
+                        <div class="p-3 rounded-lg border ${style} flex justify-between items-center">
                             <div class="flex flex-col">
                                 <span class="font-bold text-sm truncate">${a.agentes?.nombre}</span>
                                 <span class="text-[10px] uppercase font-bold opacity-70">${icono} ${a.estado}</span>
@@ -195,42 +225,37 @@
                 const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
                 personalGlobal = data || [];
             }
+            renderPersonal(personalGlobal);
+        }
+
+        function renderPersonal(data) {
             const tabla = document.getElementById('tabla-personal');
             tabla.innerHTML = '';
-            personalGlobal.forEach(agente => {
+            data.forEach(agente => {
                 tabla.innerHTML += `
                     <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td>
                         <td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td>
                         <td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td>
                         <td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">${agente.email || '-'}</td>
                     </tr>`;
             });
         }
 
         document.getElementById('filtro-agentes').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
-            const filtrados = personalGlobal.filter(a => a.nombre.toLowerCase().includes(term) || (a.codigo && a.codigo.toLowerCase().includes(term)));
-            const tabla = document.getElementById('tabla-personal');
-            tabla.innerHTML = '';
-            filtrados.forEach(agente => {
-                tabla.innerHTML += `
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td>
-                        <td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td>
-                        <td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td>
-                        <td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td>
-                    </tr>`;
-            });
+            renderPersonal(personalGlobal.filter(a => a.nombre.toLowerCase().includes(term) || (a.codigo && a.codigo.toLowerCase().includes(term))));
         });
 
-        cargarDashboard();
-        setInterval(() => { cargarDashboard(); }, 60000); // Refresca cada minuto por el reloj
-
-        supabaseClient.channel('schema-db-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'ausencias' }, () => cargarDashboard())
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'status_events' }, () => cargarDashboard())
-            .subscribe();
+        function iniciarDashboard() {
+            cargarDashboard();
+            setInterval(cargarDashboard, 60000);
+            supabaseClient.channel('schema-db-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'ausencias' }, () => cargarDashboard())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'status_events' }, () => cargarDashboard())
+                .subscribe();
+        }
     </script>
 </body>
 </html>
