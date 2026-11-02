@@ -32,15 +32,17 @@
         <div id="mensaje" class="text-sm text-center font-bold text-green-600 hidden"></div>
     </div>
 
-    <script>
-        // Conectamos con Supabase usando tu URL y tu Llave Pública (Publishable)
+      <script>
+        // Conectamos con Supabase (Nota el nombre 'supabaseClient')
         const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
-        const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s'; // Tu llave pública
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s'; 
+        
+        // ¡Aquí estaba el error! Ahora se llama supabaseClient
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         // 1. Cargar los agentes al abrir la página
         async function cargarAgentes() {
-            const { data, error } = await supabase.from('agentes').select('id, nombre, codigo').order('nombre');
+            const { data, error } = await supabaseClient.from('agentes').select('id, nombre, codigo').order('nombre');
             const select = document.getElementById('agenteSelect');
             
             if (error) {
@@ -69,27 +71,23 @@
             const fechaHoy = new Date().toISOString().split('T')[0];
 
             if (tipo === 'falta') {
-                // Insertar en tabla ausencias
-                const { error } = await supabase.from('ausencias').insert([
+                const { error } = await supabaseClient.from('ausencias').insert([
                     { agente_id: agenteId, fecha: fechaHoy, tipo: 'falta', motivo: 'Registrado desde Web App' }
                 ]);
                 if (error) return alert("Error al guardar: " + error.message);
             } else if (tipo === 'baño') {
-                // Insertar en status_events
-                const { error } = await supabase.from('status_events').insert([
+                const { error } = await supabaseClient.from('status_events').insert([
                     { agente_id: agenteId, estado: 'baño' }
                 ]);
                 if (error) return alert("Error al guardar: " + error.message);
             }
 
-            // Mostrar mensaje de éxito
             const msgDiv = document.getElementById('mensaje');
             msgDiv.textContent = `✅ Registro de ${tipo} guardado para ${agenteNombre}`;
             msgDiv.classList.remove('hidden');
             setTimeout(() => msgDiv.classList.add('hidden'), 3000);
         }
 
-        // Iniciar
         cargarAgentes();
     </script>
 </body>
