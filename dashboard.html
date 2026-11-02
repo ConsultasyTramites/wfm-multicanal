@@ -12,7 +12,7 @@
 </head>
 <body class="bg-gray-100 flex h-screen overflow-hidden font-sans">
 
-    <!-- PANTALLA DE LOGIN PARA ADMIN -->
+    <!-- LOGIN ADMIN -->
     <div id="login-screen" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50">
         <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border-t-8 border-brand-dark">
             <div class="text-center mb-6">
@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <!-- APP (Oculta hasta loguearse) -->
+    <!-- APP -->
     <div id="app-screen" class="w-full flex h-screen hidden">
         <aside class="w-64 bg-brand-dark text-white flex flex-col shadow-xl z-20">
             <div class="h-24 flex flex-col items-center justify-center border-b border-brand-mid">
@@ -37,8 +37,10 @@
                 <p class="text-brand-teal font-semibold tracking-[0.3em] text-[10px] mt-1">EDUCACIÓN SUPERIOR</p>
             </div>
             <nav class="flex-1 px-4 py-6 space-y-2">
-                <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium">📊 Dashboard</button>
-                <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium">👥 Personal</button>
+                <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium text-left">📊 Dashboard</button>
+                <!-- NUEVA PESTAÑA: HORARIOS -->
+                <button onclick="cambiarPestana('horarios')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📅 Horarios</button>
+                <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
             </nav>
             <div class="p-4 border-t border-brand-mid">
                 <button onclick="cerrarSesionAdmin()" class="w-full text-xs font-bold text-red-300 hover:text-white bg-red-900/30 py-2 rounded">Cerrar Sesión</button>
@@ -49,7 +51,6 @@
             <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
                 <h2 class="text-2xl font-bold text-brand-dark" id="titulo-pestana">Dashboard General</h2>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm font-medium text-gray-500" id="fecha-hoy"></span>
                     <div class="flex items-center space-x-2 bg-brand-light text-brand-teal px-3 py-1.5 rounded-full text-xs font-bold border border-brand-teal/30">
                         <div class="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></div>
                         <span>En Vivo</span>
@@ -57,6 +58,7 @@
                 </div>
             </header>
 
+            <!-- VISTA DASHBOARD -->
             <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Total Agentes</p><p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p></div>
@@ -64,7 +66,6 @@
                     <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-400"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">En Auxiliar</p><p class="text-4xl font-extrabold text-orange-400" id="kpi-auxiliares">0</p></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Disponibles</p><p class="text-4xl font-extrabold text-green-500" id="kpi-disponibles">0</p></div>
                 </div>
-
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
                         <div class="px-6 py-4 border-b bg-gray-50/50"><h3 class="text-lg font-bold text-brand-dark">Últimos Registros</h3></div>
@@ -82,6 +83,65 @@
                 </div>
             </div>
 
+            <!-- NUEVA VISTA HORARIOS -->
+            <div id="vista-horarios" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Formulario para crear horario -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                        <h3 class="text-lg font-bold text-brand-dark mb-4">Asignar Nuevo Turno</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Agente</label>
+                                <select id="horario-agente" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Fecha</label>
+                                <input type="date" id="horario-fecha" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">Hora Inicio</label>
+                                    <input type="time" id="horario-inicio" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">Hora Fin</label>
+                                    <input type="time" id="horario-fin" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Canal Asignado</label>
+                                <select id="horario-canal" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
+                                    <option value="ccvox">CCVOX (Voz)</option>
+                                    <option value="pchat">PCHAT (Telegram)</option>
+                                    <option value="correo">Correo (Trámites)</option>
+                                    <option value="multicanal">Multicanal</option>
+                                </select>
+                            </div>
+                            <button onclick="guardarHorario()" class="w-full bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 rounded-lg text-sm transition-colors mt-2">Guardar Turno</button>
+                            <div id="mensaje-horario" class="text-xs text-center font-bold text-green-600 hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de horarios del día -->
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-brand-dark">Turnos Asignados</h3>
+                            <input type="date" id="filtro-fecha" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarHorariosDelDia()">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                    <tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Horario</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Acción</th></tr>
+                                </thead>
+                                <tbody id="tabla-horarios"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA PERSONAL -->
             <div id="vista-personal" class="p-6 max-w-7xl mx-auto w-full hidden">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100">
                     <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
@@ -90,7 +150,7 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Nivel</th><th class="px-6 py-3">Correo</th></tr></thead>
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Canal Base</th><th class="px-6 py-3">Nivel</th><th class="px-6 py-3">Correo</th></tr></thead>
                             <tbody id="tabla-personal"></tbody>
                         </table>
                     </div>
@@ -105,55 +165,38 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let isAdmin = false;
+        let listaAgentesGlobal = [];
 
-        // 1. Verificar Sesión al cargar
-        supabaseClient.auth.getSession().then(({ data: { session } }) => {
-            if (session) verificarAdmin(session.user);
-        });
+        supabaseClient.auth.getSession().then(({ data: { session } }) => { if (session) verificarAdmin(session.user); });
 
-        // 2. Login
         async function loginAdmin() {
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-pass').value;
             const err = document.getElementById('login-error');
             err.classList.add('hidden');
-
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-            if (error) {
-                err.textContent = "Credenciales incorrectas";
-                err.classList.remove('hidden');
-                return;
-            }
+            if (error) { err.textContent = "Credenciales incorrectas"; err.classList.remove('hidden'); return; }
             verificarAdmin(data.user);
         }
 
-        // 3. Verificar si el usuario es Admin
         async function verificarAdmin(user) {
-            const { data } = await supabaseClient.from('agentes').select('is_admin, nombre').eq('user_id', user.id).single();
-            
+            const { data } = await supabaseClient.from('agentes').select('is_admin').eq('user_id', user.id).single();
             if (data && data.is_admin === true) {
                 isAdmin = true;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 iniciarDashboard();
+                cargarSelectores();
             } else {
                 alert("Acceso denegado. No eres supervisor.");
                 supabaseClient.auth.signOut();
             }
         }
 
-        async function cerrarSesionAdmin() {
-            await supabaseClient.auth.signOut();
-            location.reload();
-        }
-
-        // --- LÓGICA DEL DASHBOARD ---
-        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-ES', opciones);
-        const hoyStr = new Date().toISOString().split('T')[0];
+        async function cerrarSesionAdmin() { await supabaseClient.auth.signOut(); location.reload(); }
 
         function cambiarPestana(pestana) {
-            ['dashboard', 'personal'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
+            ['dashboard', 'personal', 'horarios'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
             document.getElementById(`vista-${pestana}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('bg-brand-mid', 'text-white');
@@ -161,42 +204,111 @@
             });
             event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
             event.target.classList.add('bg-brand-mid', 'text-white');
-            document.getElementById('titulo-pestana').textContent = { dashboard: 'Dashboard General', personal: 'Gestión de Personal' }[pestana];
+            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios' };
+            document.getElementById('titulo-pestana').textContent = titulos[pestana];
+            
             if (pestana === 'personal') cargarPersonal();
+            if (pestana === 'horarios') cargarHorariosDelDia();
         }
+
+        // --- LÓGICA DE HORARIOS ---
+        async function cargarSelectores() {
+            // Llenar el select de agentes
+            const { data } = await supabaseClient.from('agentes').select('id, nombre').order('nombre');
+            listaAgentesGlobal = data || [];
+            const select = document.getElementById('horario-agente');
+            select.innerHTML = '<option value="">Seleccione...</option>';
+            listaAgentesGlobal.forEach(a => { select.innerHTML += `<option value="${a.id}">${a.nombre}</option>`; });
+
+            // Poner la fecha de hoy por defecto en los inputs
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('horario-fecha').value = hoy;
+            document.getElementById('filtro-fecha').value = hoy;
+        }
+
+        async function guardarHorario() {
+            const agente_id = document.getElementById('horario-agente').value;
+            const fecha = document.getElementById('horario-fecha').value;
+            const hora_inicio = document.getElementById('horario-inicio').value;
+            const hora_fin = document.getElementById('horario-fin').value;
+            const canal = document.getElementById('horario-canal').value;
+            const msg = document.getElementById('mensaje-horario');
+
+            if(!agente_id || !fecha || !hora_inicio || !hora_fin) return alert("Llena todos los campos por favor.");
+
+            const { error } = await supabaseClient.from('plan_diario').insert([{
+                agente_id, fecha, hora_inicio, hora_fin, canal, tipo: 'turno'
+            }]);
+
+            if (error) return alert("Error: " + error.message);
+
+            msg.textContent = "Turno guardado correctamente ✅";
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+            
+            // Limpiar horas y recargar tabla
+            document.getElementById('horario-inicio').value = '';
+            document.getElementById('horario-fin').value = '';
+            cargarHorariosDelDia();
+        }
+
+        async function cargarHorariosDelDia() {
+            const fechaFiltro = document.getElementById('filtro-fecha').value;
+            const tabla = document.getElementById('tabla-horarios');
+            
+            const { data } = await supabaseClient.from('plan_diario')
+                .select('id, hora_inicio, hora_fin, canal, agentes(nombre)')
+                .eq('fecha', fechaFiltro)
+                .order('hora_inicio');
+            
+            tabla.innerHTML = '';
+            if (data && data.length > 0) {
+                data.forEach(h => {
+                    let colorCanal = h.canal === 'ccvox' ? 'bg-blue-100 text-blue-800' : (h.canal === 'pchat' ? 'bg-teal-100 text-teal-800' : 'bg-purple-100 text-purple-800');
+                    tabla.innerHTML += `
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-bold text-brand-dark">${h.agentes?.nombre}</td>
+                            <td class="px-6 py-4 font-mono font-medium">${h.hora_inicio} - ${h.hora_fin}</td>
+                            <td class="px-6 py-4"><span class="${colorCanal} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${h.canal}</span></td>
+                            <td class="px-6 py-4"><button onclick="eliminarHorario('${h.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">Eliminar</button></td>
+                        </tr>`;
+                });
+            } else {
+                tabla.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">No hay turnos asignados para esta fecha</td></tr>';
+            }
+        }
+
+        async function eliminarHorario(id) {
+            if(!confirm("¿Seguro que deseas eliminar este turno?")) return;
+            await supabaseClient.from('plan_diario').delete().eq('id', id);
+            cargarHorariosDelDia();
+        }
+
+        // --- LÓGICA DEL DASHBOARD Y PERSONAL (Mantenida) ---
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const hoyStr = new Date().toISOString().split('T')[0];
 
         async function cargarDashboard() {
             if (!isAdmin) return;
-
             const { count: total } = await supabaseClient.from('agentes').select('*', { count: 'exact', head: true });
             document.getElementById('kpi-total').textContent = total || 0;
-
             const { data: ausencias } = await supabaseClient.from('ausencias').select('*').eq('fecha', hoyStr);
             document.getElementById('kpi-ausencias').textContent = ausencias ? ausencias.length : 0;
-
             const { data: activos } = await supabaseClient.from('status_events').select('*, agentes(nombre)').is('fin', null).order('inicio', { ascending: true });
             document.getElementById('kpi-auxiliares').textContent = activos ? activos.length : 0;
-
             const disponibles = (total || 0) - (ausencias ? ausencias.length : 0) - (activos ? activos.length : 0);
             document.getElementById('kpi-disponibles').textContent = disponibles < 0 ? 0 : disponibles;
 
             const { data: registros } = await supabaseClient.from('ausencias').select(`id, tipo, created_at, agentes (nombre)`).order('created_at', { ascending: false }).limit(5);
             const tabla = document.getElementById('tabla-registros');
             tabla.innerHTML = registros && registros.length > 0 ? '' : '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No hay registros hoy</td></tr>';
-            
             if(registros) {
                 registros.forEach(reg => {
                     const hora = new Date(reg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                     let color = reg.tipo === 'falta' ? 'bg-red-100 text-red-700' : (reg.tipo === 'retiro' ? 'bg-gray-200 text-gray-800' : 'bg-purple-100 text-purple-700');
-                    tabla.innerHTML += `
-                        <tr class="bg-white border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 font-bold text-brand-dark">${reg.agentes?.nombre}</td>
-                            <td class="px-6 py-4"><span class="${color} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${reg.tipo}</span></td>
-                            <td class="px-6 py-4 font-medium">${hora}</td>
-                        </tr>`;
+                    tabla.innerHTML += `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-6 py-4 font-bold text-brand-dark">${reg.agentes?.nombre}</td><td class="px-6 py-4"><span class="${color} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${reg.tipo}</span></td><td class="px-6 py-4 font-medium">${hora}</td></tr>`;
                 });
             }
-
             const listaAux = document.getElementById('lista-auxiliares');
             listaAux.innerHTML = '';
             if (activos && activos.length > 0) {
@@ -205,14 +317,7 @@
                     let icono = a.estado === 'baño' ? '🚽' : (a.estado === 'almuerzo' ? '🍽️' : '📚');
                     let limite = a.estado === 'baño' ? 15 : (a.estado === 'almuerzo' ? 45 : 60);
                     let style = minutos >= limite ? 'text-red-700 bg-red-50 border-red-300' : 'text-brand-dark bg-gray-50 border-gray-200';
-                    listaAux.innerHTML += `
-                        <div class="p-3 rounded-lg border ${style} flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="font-bold text-sm truncate">${a.agentes?.nombre}</span>
-                                <span class="text-[10px] uppercase font-bold opacity-70">${icono} ${a.estado}</span>
-                            </div>
-                            <span class="text-xs font-extrabold whitespace-nowrap">${minutos} min</span>
-                        </div>`;
+                    listaAux.innerHTML += `<div class="p-3 rounded-lg border ${style} flex justify-between items-center"><div class="flex flex-col"><span class="font-bold text-sm truncate">${a.agentes?.nombre}</span><span class="text-[10px] uppercase font-bold opacity-70">${icono} ${a.estado}</span></div><span class="text-xs font-extrabold whitespace-nowrap">${minutos} min</span></div>`;
                 });
             } else {
                 listaAux.innerHTML = '<p class="text-sm text-gray-400 text-center py-6 font-medium">Todos en línea ✨</p>';
@@ -232,14 +337,7 @@
             const tabla = document.getElementById('tabla-personal');
             tabla.innerHTML = '';
             data.forEach(agente => {
-                tabla.innerHTML += `
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td>
-                        <td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td>
-                        <td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td>
-                        <td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td>
-                        <td class="px-6 py-4 text-xs text-gray-500">${agente.email || '-'}</td>
-                    </tr>`;
+                tabla.innerHTML += `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td><td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td><td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td><td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td><td class="px-6 py-4 text-xs text-gray-500">${agente.email || '-'}</td></tr>`;
             });
         }
 
