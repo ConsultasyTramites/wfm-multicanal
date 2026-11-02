@@ -46,7 +46,7 @@
             <button onclick="cerrarSesion()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1.5 rounded hover:bg-red-100 transition">Salir</button>
         </div>
 
-        <!-- 👇 NUEVO RECUADRO: HORARIO DEL DÍA 👇 -->
+        <!-- RECUADRO: HORARIO DEL DÍA -->
         <div class="mb-5 p-4 bg-brand-light rounded-lg border border-brand-teal/30 flex items-center justify-between shadow-sm">
             <div>
                 <p class="text-xs font-bold text-brand-teal uppercase tracking-wider mb-1">Mi turno de hoy</p>
@@ -54,7 +54,6 @@
             </div>
             <div class="text-2xl">📅</div>
         </div>
-        <!-- 👆 FIN DEL NUEVO RECUADRO 👆 -->
 
         <div class="mb-5">
             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Auxiliares (Pausas)</p>
@@ -131,7 +130,7 @@
                 agenteActualId = data.id;
                 document.getElementById('nombre-agente').textContent = data.nombre;
 
-                // 👇 NUEVA LÓGICA: CARGAR HORARIO DEL DÍA 👇
+                // LÓGICA: CARGAR HORARIO DEL DÍA
                 const fechaHoy = new Date().toISOString().split('T')[0];
                 const { data: horario } = await supabaseClient.from('plan_diario')
                     .select('hora_inicio, hora_fin, canal')
@@ -141,15 +140,14 @@
 
                 const infoHorario = document.getElementById('horario-info');
                 if (horario) {
-                    infoHorario.innerHTML = `<span class="text-brand-teal font-extrabold text-base">${horario.hora_inicio} - ${horario.hora_fin}</span> | Canal: <span class="uppercase font-bold">${horario.canal}</span>`;
+                    // AQUÍ ESTÁ EL CAMBIO: substring(0,5) para quitar los segundos
+                    infoHorario.innerHTML = `<span class="text-brand-teal font-extrabold text-base">${horario.hora_inicio.substring(0,5)} - ${horario.hora_fin.substring(0,5)}</span> | Canal: <span class="uppercase font-bold">${horario.canal}</span>`;
                 } else {
                     infoHorario.textContent = "Día libre / No asignado";
                     infoHorario.classList.add('text-gray-400');
                 }
-                // 👆 FIN DE LA NUEVA LÓGICA 👆
 
             } else {
-                // Si el correo no está en la tabla agentes, lo tratamos como admin (para pruebas)
                 document.getElementById('nombre-agente').textContent = "Supervisor / Admin";
                 document.getElementById('horario-info').textContent = "Modo Administrador";
             }
