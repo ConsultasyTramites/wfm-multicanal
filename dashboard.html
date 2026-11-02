@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - WFM Acarrion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Configuración de colores de Tailwind (Puedes cambiarlos aquí)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#4F46E5', 600: '#4338CA' } // Color principal (Indigo)
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Animación de pulso para el indicador en vivo */
+        .pulse-dot { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden font-sans">
+
+    <!-- BARRA LATERAL (Sidebar) -->
+    <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center justify-center border-b border-gray-800">
+            <h1 class="text-xl font-bold tracking-wider">WFM <span class="text-brand-500">Acarrion</span></h1>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2">
+            <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-gray-800 text-white rounded-lg transition-colors">
+                📊 Dashboard
+            </button>
+            <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors">
+                👥 Personal
+            </button>
+            <button onclick="cambiarPestana('reportes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors">
+                📑 Reportes
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-800 text-xs text-gray-500 text-center">
+            Sistema WFM v1.0
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <!-- Cabecera -->
+        <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
+            <h2 class="text-2xl font-semibold text-gray-800" id="titulo-pestana">Dashboard General</h2>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-500" id="fecha-hoy"></span>
+                <div class="flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                    <div class="w-2 h-2 bg-green-500 rounded-full pulse-dot"></div>
+                    <span>En Vivo</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- VISTA 1: DASHBOARD -->
+        <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
+            <!-- Tarjetas KPI -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-500">
+                    <p class="text-sm font-medium text-gray-500 mb-1">Total Agentes</p>
+                    <p class="text-3xl font-bold text-gray-800" id="kpi-total">0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
+                    <p class="text-sm font-medium text-gray-500 mb-1">Faltas Hoy</p>
+                    <p class="text-3xl font-bold text-red-600" id="kpi-faltas">0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+                    <p class="text-sm font-medium text-gray-500 mb-1">En Baño / Break</p>
+                    <p class="text-3xl font-bold text-yellow-600" id="kpi-baños">0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                    <p class="text-sm font-medium text-gray-500 mb-1">Disponibles</p>
+                    <p class="text-3xl font-bold text-green-600" id="kpi-disponibles">0</p>
+                </div>
+            </div>
+
+            <!-- Tabla de Actividad Reciente -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-800">Últimos Registros (Hoy)</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3">Agente</th>
+                                <th class="px-6 py-3">Evento</th>
+                                <th class="px-6 py-3">Hora</th>
+                                <th class="px-6 py-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-registros">
+                            <!-- Se llena con JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: PERSONAL -->
+        <div id="vista-personal" class="p-6 max-w-7xl mx-auto w-full hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">Directorio de Agentes</h3>
+                    <input type="text" id="filtro-agentes" placeholder="Buscar por nombre o código..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none w-64">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3">Código</th>
+                                <th class="px-6 py-3">Nombre</th>
+                                <th class="px-6 py-3">Canal</th>
+                                <th class="px-6 py-3">Nivel</th>
+                                <th class="px-6 py-3">Correo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-personal">
+                            <!-- Se llena con JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: REPORTES (Placeholder) -->
+        <div id="vista-reportes" class="p-6 max-w-7xl mx-auto w-full hidden">
+            <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+                <p class="text-gray-400 text-lg">Módulo de Reportes en construcción...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- CONFIGURACIÓN SUPABASE ---
+        const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
+        const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // --- FECHA ACTUAL ---
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-ES', opciones);
+        const hoyStr = new Date().toISOString().split('T')[0];
+
+        // --- LÓGICA DE PESTAÑAS ---
+        function cambiarPestana(pestana) {
+            // Ocultar todas
+            document.getElementById('vista-dashboard').classList.add('hidden');
+            document.getElementById('vista-personal').classList.add('hidden');
+            document.getElementById('vista-reportes').classList.add('hidden');
+            
+            // Mostrar la seleccionada
+            document.getElementById(`vista-${pestana}`).classList.remove('hidden');
+
+            // Estilos de botones
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-800', 'text-white');
+                btn.classList.add('text-gray-400', 'hover:bg-gray-800', 'hover:text-white');
+            });
+            event.target.classList.remove('text-gray-400', 'hover:bg-gray-800', 'hover:text-white');
+            event.target.classList.add('bg-gray-800', 'text-white');
+
+            // Cambiar título
+            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', reportes: 'Reportes' };
+            document.getElementById('titulo-pestana').textContent = titulos[pestana];
+            
+            // Si es personal, cargar tabla
+            if (pestana === 'personal') cargarPersonal();
+        }
+
+        // --- CARGAR KPIs DEL DASHBOARD ---
+        async function cargarDashboard() {
+            // 1. Total Agentes
+            const { count: total } = await supabaseClient.from('agentes').select('*', { count: 'exact', head: true });
+            document.getElementById('kpi-total').textContent = total || 0;
+
+            // 2. Faltas hoy
+            const { data: faltas } = await supabaseClient.from('ausencias').select('*').eq('fecha', hoyStr);
+            document.getElementById('kpi-faltas').textContent = faltas ? faltas.length : 0;
+
+            // 3. Baños activos (sin hora de fin)
+            const { data: baños } = await supabaseClient.from('status_events').select('*').eq('estado', 'baño').is('fin', null);
+            document.getElementById('kpi-baños').textContent = baños ? baños.length : 0;
+
+            // 4. Calcular disponibles (Total - Faltas - Baños)
+            const disponibles = (total || 0) - (faltas ? faltas.length : 0) - (baños ? baños.length : 0);
+            document.getElementById('kpi-disponibles').textContent = disponibles;
+
+            // 5. Cargar últimos registros para la tabla
+            const { data: registros } = await supabaseClient
+                .from('ausencias')
+                .select(`id, tipo, created_at, agentes (nombre)`)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const tabla = document.getElementById('tabla-registros');
+            tabla.innerHTML = '';
+            
+            if (registros && registros.length > 0) {
+                registros.forEach(reg => {
+                    const hora = new Date(reg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    tabla.innerHTML += `
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-medium text-gray-900">${reg.agentes?.nombre || 'Desconocido'}</td>
+                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase">${reg.tipo}</span></td>
+                            <td class="px-6 py-4">${hora}</td>
+                            <td class="px-6 py-4"><span class="text-gray-500">Registrado</span></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tabla.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center">No hay registros hoy</td></tr>';
+            }
+        }
+
+        // --- CARGAR TABLA DE PERSONAL ---
+        let personalGlobal = [];
+        async function cargarPersonal() {
+            const tabla = document.getElementById('tabla-personal');
+            if (personalGlobal.length === 0) {
+                const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
+                personalGlobal = data || [];
+            }
+            renderizarPersonal(personalGlobal);
+        }
+
+        function renderizarPersonal(data) {
+            const tabla = document.getElementById('tabla-personal');
+            tabla.innerHTML = '';
+            data.forEach(agente => {
+                tabla.innerHTML += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4 font-mono text-xs">${agente.codigo || 'N/A'}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">${agente.nombre}</td>
+                        <td class="px-6 py-4 uppercase text-xs">${agente.canal_principal}</td>
+                        <td class="px-6 py-4 capitalize">${agente.nivel}</td>
+                        <td class="px-6 py-4 text-xs">${agente.email || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Filtro de búsqueda de personal
+        document.getElementById('filtro-agentes').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtrados = personalGlobal.filter(a => 
+                a.nombre.toLowerCase().includes(term) || 
+                (a.codigo && a.codigo.toLowerCase().includes(term))
+            );
+            renderizarPersonal(filtrados);
+        });
+
+        // --- INICIALIZAR Y SUSCRIPCIÓN EN TIEMPO REAL ---
+        cargarDashboard();
+
+        // Escuchar cambios en ausencias y status_events para actualizar el dashboard en vivo
+        supabaseClient
+            .channel('schema-db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ausencias' }, payload => {
+                cargarDashboard(); // Recargar los datos cuando haya una nueva falta
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'status_events' }, payload => {
+                cargarDashboard(); // Recargar cuando alguien entre o salga del baño
+            })
+            .subscribe()
+
+    </script>
+</body>
+</html>
