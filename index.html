@@ -13,33 +13,51 @@
 <body class="bg-gray-100 font-sans p-4 flex items-center justify-center min-h-screen">
     <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark">
         
-        <!-- Encabezado simulando el Logo -->
         <div class="text-center mb-6">
             <h1 class="text-3xl font-extrabold text-brand-dark tracking-tighter">carrión</h1>
             <p class="text-brand-teal font-semibold tracking-[0.3em] text-xs">EDUCACIÓN SUPERIOR</p>
         </div>
         
-        <div class="mb-4">
+        <div class="mb-5">
             <label class="block text-gray-700 text-sm font-bold mb-2">Seleccionar Agente:</label>
-            <select id="agenteSelect" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50">
+            <select id="agenteSelect" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50 font-medium">
                 <option value="">Cargando agentes...</option>
             </select>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 mb-4">
-            <button onclick="registrarEvento('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                🚽 Ir al Baño
-            </button>
-            <button onclick="volverDelBaño()" class="bg-brand-mid hover:bg-blue-800 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                ✅ Volver del Baño
-            </button>
+        <!-- SECCIÓN AUXILIARES (Cronometrados) -->
+        <div class="mb-5">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Auxiliares (Pausas)</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="registrarAuxiliar('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
+                    🚽 Baño
+                </button>
+                <button onclick="registrarAuxiliar('almuerzo')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
+                    🍽️ Almuerzo
+                </button>
+                <button onclick="registrarAuxiliar('capacitacion')" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
+                    📚 Capacitación
+                </button>
+                <button onclick="volverDeAuxiliar()" class="bg-brand-mid hover:bg-blue-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm border-2 border-brand-dark">
+                    ✅ Volver a laborar
+                </button>
+            </div>
         </div>
-        
-        <button onclick="registrarEvento('falta')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors shadow-sm">
-            ❌ Registrar Falta
-        </button>
 
-        <div id="mensaje" class="mt-4 text-sm text-center font-bold text-green-600 hidden p-2 bg-green-50 rounded border border-green-200"></div>
+        <!-- SECCIÓN AUSENCIAS (Afectan el día) -->
+        <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Eventos / Ausencias</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="registrarAusencia('falta')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
+                    ❌ Falta
+                </button>
+                <button onclick="registrarAusencia('retiro')" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">
+                    🏃 Retiro / Salud
+                </button>
+            </div>
+        </div>
+
+        <div id="mensaje" class="mt-4 text-sm text-center font-bold text-green-600 hidden p-3 bg-green-50 rounded-lg border border-green-200"></div>
     </div>
 
     <script>
@@ -48,56 +66,65 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function cargarAgentes() {
-            const { data, error } = await supabaseClient.from('agentes').select('id, nombre, codigo').order('nombre');
+            const { data, error } = await supabaseClient.from('agentes').select('id, nombre').order('nombre');
             const select = document.getElementById('agenteSelect');
             if (error) return console.error(error);
             select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
             data.forEach(agente => {
-                select.innerHTML += `<option value="${agente.id}" data-nombre="${agente.nombre}">${agente.nombre}</option>`;
+                select.innerHTML += `<option value="${agente.id}">${agente.nombre}</option>`;
             });
         }
 
         function mostrarMensaje(texto, color = "green") {
             const msgDiv = document.getElementById('mensaje');
             msgDiv.textContent = texto;
-            msgDiv.className = `mt-4 text-sm text-center font-bold text-${color}-600 hidden p-2 bg-${color}-50 rounded border border-${color}-200`;
+            msgDiv.className = `mt-4 text-sm text-center font-bold text-${color}-700 hidden p-3 bg-${color}-50 rounded-lg border border-${color}-200`;
             msgDiv.classList.remove('hidden');
-            setTimeout(() => msgDiv.classList.add('hidden'), 3000);
+            setTimeout(() => msgDiv.classList.add('hidden'), 3500);
         }
 
-        async function registrarEvento(tipo) {
-            const select = document.getElementById('agenteSelect');
-            const agenteId = select.value;
+        // Registrar pausas (baño, almuerzo, capacitación)
+        async function registrarAuxiliar(estado) {
+            const agenteId = document.getElementById('agenteSelect').value;
             if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
-            
-            const fechaHoy = new Date().toISOString().split('T')[0];
 
-            if (tipo === 'falta') {
-                const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteId, fecha: fechaHoy, tipo: 'falta', motivo: 'Web App' }]);
-                if (error) return alert("Error: " + error.message);
-                mostrarMensaje("Falta registrada correctamente");
-            } else if (tipo === 'baño') {
-                const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteId, estado: 'baño' }]);
-                if (error) return alert("Error: " + error.message);
-                mostrarMensaje("Salida al baño registrada");
-            }
+            // Validar que no tenga otra pausa abierta
+            const { data: activos } = await supabaseClient.from('status_events').select('id').eq('agente_id', agenteId).is('fin', null);
+            if (activos && activos.length > 0) return alert("Ya tienes una pausa activa. Debes marcar 'Volver a laborar' primero.");
+
+            const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteId, estado: estado }]);
+            if (error) return alert("Error: " + error.message);
+            mostrarMensaje(`Salida a ${estado.toUpperCase()} registrada`, "teal");
         }
 
-        async function volverDelBaño() {
-            const select = document.getElementById('agenteSelect');
-            const agenteId = select.value;
+        // Volver de cualquier pausa
+        async function volverDeAuxiliar() {
+            const agenteId = document.getElementById('agenteSelect').value;
             if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
 
-            // Buscamos el registro de baño abierto (sin hora de fin) y le ponemos la hora actual
-            const { error } = await supabaseClient
+            const { data: activos, error } = await supabaseClient
                 .from('status_events')
                 .update({ fin: new Date().toISOString() })
                 .eq('agente_id', agenteId)
-                .eq('estado', 'baño')
-                .is('fin', null);
+                .is('fin', null)
+                .select();
 
             if (error) return alert("Error: " + error.message);
-            mostrarMensaje("Regreso del baño registrado", "blue");
+            if (activos.length === 0) return alert("No tienes ninguna pausa activa pendiente.");
+            
+            mostrarMensaje("Regreso a laborar registrado", "blue");
+        }
+
+        // Registrar faltas o retiros (ausencias)
+        async function registrarAusencia(tipo) {
+            const agenteId = document.getElementById('agenteSelect').value;
+            if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
+
+            const fechaHoy = new Date().toISOString().split('T')[0];
+            const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteId, fecha: fechaHoy, tipo: tipo, motivo: 'Web App' }]);
+            
+            if (error) return alert("Error: " + error.message);
+            mostrarMensaje(`Registro de ${tipo.toUpperCase()} guardado`, "red");
         }
 
         cargarAgentes();
