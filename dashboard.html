@@ -39,7 +39,6 @@
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                 <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium text-left">📊 Dashboard</button>
                 <button onclick="cambiarPestana('horarios')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📅 Horarios</button>
-                <!-- NUEVA PESTAÑA -->
                 <button onclick="cambiarPestana('cobertura')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📈 Cobertura</button>
                 <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
             </nav>
@@ -116,18 +115,24 @@
                 </div>
             </div>
 
-            <!-- 👇 NUEVA VISTA COBERTURA 👇 -->
+            <!-- VISTA COBERTURA INTELIGENTE -->
             <div id="vista-cobertura" class="p-6 max-w-7xl mx-auto w-full hidden">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 relative">
                     <div class="px-6 py-4 border-b bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h3 class="text-lg font-bold text-brand-dark">Cobertura por Hora</h3>
-                            <p class="text-xs text-gray-500">Calculado en base a turnos asignados menos ausencias.</p>
+                            <h3 class="text-lg font-bold text-brand-dark">Cobertura vs Requerimiento</h3>
+                            <p class="text-xs text-gray-500">Compara tus turnos actuales con las metas definidas.</p>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
                             <label class="text-sm font-bold text-gray-600">Fecha:</label>
                             <input type="date" id="fecha-cobertura" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarCobertura()">
-                            <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600">Actualizar</button>
+                            
+                            <!-- BOTÓN PARA ABRIR EL MODAL DE METAS -->
+                            <button onclick="abrirModalMetas()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm">
+                                ⚙️ Configurar Metas
+                            </button>
+                            
+                            <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600 shadow-sm">Actualizar</button>
                         </div>
                     </div>
                     
@@ -136,14 +141,20 @@
                             <thead>
                                 <tr class="bg-brand-dark text-white">
                                     <th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>
-                                    <!-- Se llena con JS: HORAS -->
-                                    <th class="px-2 py-2 border-r border-brand-mid bg-brand-mid">Total</th>
+                                    <!-- Se llena con JS -->
                                 </tr>
                             </thead>
                             <tbody id="tabla-cobertura">
                                 <!-- Se llena con JS -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- LEYENDA DE COLORES -->
+                    <div class="px-6 py-3 bg-gray-50 border-t flex gap-4 text-xs font-bold text-gray-500 justify-end rounded-b-xl">
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-200 border border-red-400 rounded-sm"></div> Déficit (Falta gente)</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-400 rounded-sm"></div> Cubierto (Suficiente)</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-white border border-gray-300 rounded-sm"></div> Sin requerimiento</div>
                     </div>
                 </div>
             </div>
@@ -166,6 +177,23 @@
         </main>
     </div>
 
+    <!-- MODAL PARA CONFIGURAR METAS (OCULTO POR DEFECTO) -->
+    <div id="modal-metas" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="text-lg font-bold text-brand-dark">Definir Agentes Requeridos (Por Hora)</h3>
+                <button onclick="cerrarModalMetas()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-4 overflow-auto flex-1" id="contenedor-inputs-metas">
+                <!-- JS llena la tabla de inputs aquí -->
+            </div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                <button onclick="cerrarModalMetas()" class="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-200 rounded">Cancelar</button>
+                <button onclick="guardarMetas()" class="px-6 py-2 bg-brand-teal text-white font-bold text-sm rounded shadow hover:bg-teal-600 transition">Guardar Metas</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
         const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s';
@@ -173,6 +201,8 @@
 
         let isAdmin = false;
         let listaAgentesGlobal = [];
+        const canales = ['ccvox', 'pchat', 'correo', 'multicanal'];
+        const horasMostrar = Array.from({length: 16}, (_, i) => i + 7); // 7 a 22
 
         supabaseClient.auth.getSession().then(({ data: { session } }) => { if (session) verificarAdmin(session.user); });
 
@@ -230,7 +260,7 @@
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('horario-fecha').value = hoy;
             document.getElementById('filtro-fecha').value = hoy;
-            document.getElementById('fecha-cobertura').value = hoy; // Fecha por defecto para cobertura
+            document.getElementById('fecha-cobertura').value = hoy;
         }
 
         async function guardarHorario() {
@@ -288,79 +318,162 @@
             cargarHorariosDelDia();
         }
 
-        // --- 👇 LÓGICA DE COBERTURA 👇 ---
+        // --- LÓGICA DE COBERTURA VS METAS ---
+        let metasGlobales = {}; // Para guardar los requerimientos temporalmente mientras se editan
+
         async function cargarCobertura() {
             const fecha = document.getElementById('fecha-cobertura').value;
             const tabla = document.getElementById('tabla-cobertura');
             const thead = document.querySelector('#vista-cobertura thead tr');
 
-            // 1. Definir las horas a mostrar (de 07:00 a 22:00)
-            const horasMostrar = Array.from({length: 16}, (_, i) => i + 7); // [7, 8, ..., 22]
-            
-            // Armar el encabezado de la tabla con las horas
             thead.innerHTML = `<th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>`;
             horasMostrar.forEach(h => {
                 thead.innerHTML += `<th class="px-2 py-2 border-r border-brand-mid bg-brand-mid text-xs">${h.toString().padStart(2, '0')}:00</th>`;
             });
-            thead.innerHTML += `<th class="px-2 py-2 bg-brand-dark text-xs">Total</th>`;
+            thead.innerHTML += `<th class="px-2 py-2 bg-brand-dark text-xs">Total Req</th>`;
 
-            // 2. Traer datos de Supabase
+            // Obtener Turnos
             const { data: turnos } = await supabaseClient.from('plan_diario').select('*').eq('fecha', fecha);
+            // Obtener Ausencias
             const { data: ausencias } = await supabaseClient.from('ausencias').select('agente_id').eq('fecha', fecha);
+            
+            // Obtener Requerimientos (Metas)
+            const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
             
             if (!turnos || turnos.length === 0) {
                 tabla.innerHTML = '<tr><td colspan="18" class="px-6 py-8 text-center text-gray-400 font-bold">No hay turnos programados para esta fecha</td></tr>';
                 return;
             }
 
-            // Crear un Set con los IDs de los agentes ausentes para búsquedas rápidas
             const agentesAusentes = new Set(ausencias ? ausencias.map(a => a.agente_id) : []);
-
-            // Función auxiliar para convertir "HH:MM:SS" a minutos totales
             const parseTime = (timeStr) => {
                 const [h, m] = timeStr.split(':').map(Number);
                 return h * 60 + m;
             };
 
-            const canales = ['ccvox', 'pchat', 'correo', 'multicanal'];
             tabla.innerHTML = '';
 
-            // 3. Calcular la matriz
             canales.forEach(canal => {
-                let filaHTML = `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-3 text-left font-bold text-brand-dark sticky left-0 bg-white border-r">${canal.toUpperCase()}</td>`;
-                
-                let totalDiaCanal = 0;
+                let filaHTML = `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-3 text-left font-bold text-brand-dark sticky left-0 bg-white border-r uppercase">${canal}</td>`;
+                let totalReqCanal = 0;
 
                 horasMostrar.forEach(hora => {
                     const horaInicioMin = hora * 60;
-                    const horaFinMin = (hora + 1) * 60;
-
-                    // Contar cuántos agentes están activos en esta hora para este canal
+                    
+                    // Agentes reales
                     const agentesActivos = turnos.filter(t => {
                         if (t.canal !== canal) return false;
-                        if (agentesAusentes.has(t.agente_id)) return false; // Restar ausencias
-                        
+                        if (agentesAusentes.has(t.agente_id)) return false;
                         const tInicio = parseTime(t.hora_inicio);
                         const tFin = parseTime(t.hora_fin);
-                        
-                        // El turno cubre esta hora si empieza antes o en la hora, y termina después
                         return tInicio <= horaInicioMin && tFin > horaInicioMin;
                     }).length;
 
-                    totalDiaCanal += agentesActivos;
-                    
-                    // Colorear celda si hay 0 agentes
-                    let bgClass = agentesActivos === 0 ? 'bg-red-50 text-red-400' : 'text-gray-700 font-bold';
-                    filaHTML += `<td class="px-2 py-3 text-center border-r ${bgClass}">${agentesActivos > 0 ? agentesActivos : '-'}</td>`;
+                    // Requerimiento meta
+                    const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
+                    const req = reqObj ? reqObj.agentes_requeridos : 0;
+                    totalReqCanal += req;
+
+                    // Lógica de colores
+                    let bgClass = 'bg-white';
+                    let textClass = 'text-gray-400';
+                    let displayText = `<span class="opacity-30">-</span>`;
+
+                    if (req > 0) {
+                        if (agentesActivos >= req) {
+                            bgClass = 'bg-green-100'; textClass = 'text-green-800 font-bold';
+                            displayText = `${agentesActivos} <span class="text-[10px] opacity-70">/ ${req}</span>`;
+                        } else {
+                            bgClass = 'bg-red-200'; textClass = 'text-red-800 font-bold';
+                            displayText = `<span class="text-red-600 font-extrabold">${agentesActivos}</span> <span class="text-[10px] opacity-70">/ ${req}</span>`;
+                        }
+                    } else if (agentesActivos > 0) {
+                        textClass = 'text-gray-800 font-bold';
+                        displayText = `${agentesActivos} <span class="text-[10px] text-gray-400 font-normal">/ 0</span>`;
+                    }
+
+                    filaHTML += `<td class="px-2 py-3 text-center border-r ${bgClass} ${textClass}">${displayText}</td>`;
                 });
 
-                filaHTML += `<td class="px-2 py-3 text-center font-extrabold text-brand-teal bg-brand-light">${totalDiaCanal}</td></tr>`;
+                filaHTML += `<td class="px-2 py-3 text-center font-extrabold text-brand-teal bg-brand-light">${totalReqCanal}</td></tr>`;
                 tabla.innerHTML += filaHTML;
             });
         }
 
+        // --- MODAL DE CONFIGURACIÓN DE METAS ---
+        async function abrirModalMetas() {
+            const fecha = document.getElementById('fecha-cobertura').value;
+            const modal = document.getElementById('modal-metas');
+            const contenedor = document.getElementById('contenedor-inputs-metas');
+            
+            // Buscar metas actuales
+            const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
+            metasGlobales = {};
+            
+            contenedor.innerHTML = '<p class="text-center text-gray-500 py-4">Cargando metas...</p>';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            let htmlTabla = `<table class="w-full text-xs text-center border-collapse">
+                <thead><tr class="bg-gray-100">
+                    <th class="p-2 border text-left">Canal</th>`;
+            horasMostrar.forEach(h => htmlTabla += `<th class="p-1 border">${h}:00</th>`);
+            htmlTabla += `</tr></thead><tbody>`;
+
+            canales.forEach(canal => {
+                htmlTabla += `<tr><td class="p-2 border font-bold bg-gray-50 text-left uppercase">${canal}</td>`;
+                horasMostrar.forEach(hora => {
+                    const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
+                    const val = reqObj ? reqObj.agentes_requeridos : 0;
+                    metasGlobales[`${canal}-${hora}`] = val; // Guardar valor inicial
+                    
+                    htmlTabla += `<td class="p-1 border">
+                        <input type="number" min="0" max="50" value="${val}" 
+                            class="w-10 text-center border rounded p-1 text-xs focus:ring-1 focus:ring-brand-teal focus:outline-none"
+                            onchange="metasGlobales['${canal}-${hora}'] = parseInt(this.value) || 0">
+                    </td>`;
+                });
+                htmlTabla += `</tr>`;
+            });
+            htmlTabla += `</tbody></table>`;
+            contenedor.innerHTML = htmlTabla;
+        }
+
+        function cerrarModalMetas() {
+            document.getElementById('modal-metas').classList.add('hidden');
+            document.getElementById('modal-metas').classList.remove('flex');
+        }
+
+        async function guardarMetas() {
+            const fecha = document.getElementById('fecha-cobertura').value;
+            
+            // Preparar el arreglo de datos para insertar/actualizar
+            let datosGuardar = [];
+            for (const [key, val] of Object.entries(metasGlobales)) {
+                if (val > 0) {
+                    const [canal, hora] = key.split('-');
+                    datosGuardar.push({
+                        fecha: fecha,
+                        canal: canal,
+                        hora: parseInt(hora),
+                        agentes_requeridos: val
+                    });
+                }
+            }
+
+            // Borrar metas antiguas de esa fecha y insertar las nuevas
+            await supabaseClient.from('requerimiento_cobertura').delete().eq('fecha', fecha);
+            
+            if (datosGuardar.length > 0) {
+                const { error } = await supabaseClient.from('requerimiento_cobertura').insert(datosGuardar);
+                if (error) return alert("Error al guardar metas: " + error.message);
+            }
+
+            cerrarModalMetas();
+            cargarCobertura(); // Recargar tabla con los nuevos colores
+        }
+
         // --- LÓGICA DEL DASHBOARD Y PERSONAL ---
-        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const hoyStr = new Date().toISOString().split('T')[0];
 
         async function cargarDashboard() {
