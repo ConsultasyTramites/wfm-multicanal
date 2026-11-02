@@ -36,10 +36,11 @@
                 <h1 class="text-3xl font-extrabold tracking-tighter text-white">carrión</h1>
                 <p class="text-brand-teal font-semibold tracking-[0.3em] text-[10px] mt-1">EDUCACIÓN SUPERIOR</p>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2">
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                 <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium text-left">📊 Dashboard</button>
-                <!-- NUEVA PESTAÑA: HORARIOS -->
                 <button onclick="cambiarPestana('horarios')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📅 Horarios</button>
+                <!-- NUEVA PESTAÑA -->
+                <button onclick="cambiarPestana('cobertura')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📈 Cobertura</button>
                 <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
             </nav>
             <div class="p-4 border-t border-brand-mid">
@@ -83,47 +84,23 @@
                 </div>
             </div>
 
-            <!-- NUEVA VISTA HORARIOS -->
+            <!-- VISTA HORARIOS -->
             <div id="vista-horarios" class="p-6 max-w-7xl mx-auto w-full hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    <!-- Formulario para crear horario -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
                         <h3 class="text-lg font-bold text-brand-dark mb-4">Asignar Nuevo Turno</h3>
                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">Agente</label>
-                                <select id="horario-agente" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">Fecha</label>
-                                <input type="date" id="horario-fecha" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
-                            </div>
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Agente</label><select id="horario-agente" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></select></div>
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Fecha</label><input type="date" id="horario-fecha" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></div>
                             <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Hora Inicio</label>
-                                    <input type="time" id="horario-inicio" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Hora Fin</label>
-                                    <input type="time" id="horario-fin" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
-                                </div>
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Hora Inicio</label><input type="time" id="horario-inicio" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></div>
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Hora Fin</label><input type="time" id="horario-fin" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">Canal Asignado</label>
-                                <select id="horario-canal" class="w-full border rounded-lg p-2 text-sm bg-gray-50">
-                                    <option value="ccvox">CCVOX (Voz)</option>
-                                    <option value="pchat">PCHAT (Telegram)</option>
-                                    <option value="correo">Correo (Trámites)</option>
-                                    <option value="multicanal">Multicanal</option>
-                                </select>
-                            </div>
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Canal Asignado</label><select id="horario-canal" class="w-full border rounded-lg p-2 text-sm bg-gray-50"><option value="ccvox">CCVOX (Voz)</option><option value="pchat">PCHAT (Telegram)</option><option value="correo">Correo (Trámites)</option><option value="multicanal">Multicanal</option></select></div>
                             <button onclick="guardarHorario()" class="w-full bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 rounded-lg text-sm transition-colors mt-2">Guardar Turno</button>
                             <div id="mensaje-horario" class="text-xs text-center font-bold text-green-600 hidden"></div>
                         </div>
                     </div>
-
-                    <!-- Tabla de horarios del día -->
                     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
                         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
                             <h3 class="text-lg font-bold text-brand-dark">Turnos Asignados</h3>
@@ -131,12 +108,42 @@
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm text-left text-gray-500">
-                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
-                                    <tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Horario</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Acción</th></tr>
-                                </thead>
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Horario</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Acción</th></tr></thead>
                                 <tbody id="tabla-horarios"></tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 👇 NUEVA VISTA COBERTURA 👇 -->
+            <div id="vista-cobertura" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="px-6 py-4 border-b bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark">Cobertura por Hora</h3>
+                            <p class="text-xs text-gray-500">Calculado en base a turnos asignados menos ausencias.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm font-bold text-gray-600">Fecha:</label>
+                            <input type="date" id="fecha-cobertura" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarCobertura()">
+                            <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600">Actualizar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto p-4">
+                        <table class="w-full text-sm text-center text-gray-600 border-collapse">
+                            <thead>
+                                <tr class="bg-brand-dark text-white">
+                                    <th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>
+                                    <!-- Se llena con JS: HORAS -->
+                                    <th class="px-2 py-2 border-r border-brand-mid bg-brand-mid">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-cobertura">
+                                <!-- Se llena con JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -196,7 +203,7 @@
         async function cerrarSesionAdmin() { await supabaseClient.auth.signOut(); location.reload(); }
 
         function cambiarPestana(pestana) {
-            ['dashboard', 'personal', 'horarios'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
+            ['dashboard', 'personal', 'horarios', 'cobertura'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
             document.getElementById(`vista-${pestana}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('bg-brand-mid', 'text-white');
@@ -204,26 +211,26 @@
             });
             event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
             event.target.classList.add('bg-brand-mid', 'text-white');
-            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios' };
+            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura' };
             document.getElementById('titulo-pestana').textContent = titulos[pestana];
             
             if (pestana === 'personal') cargarPersonal();
             if (pestana === 'horarios') cargarHorariosDelDia();
+            if (pestana === 'cobertura') cargarCobertura();
         }
 
         // --- LÓGICA DE HORARIOS ---
         async function cargarSelectores() {
-            // Llenar el select de agentes
             const { data } = await supabaseClient.from('agentes').select('id, nombre').order('nombre');
             listaAgentesGlobal = data || [];
             const select = document.getElementById('horario-agente');
             select.innerHTML = '<option value="">Seleccione...</option>';
             listaAgentesGlobal.forEach(a => { select.innerHTML += `<option value="${a.id}">${a.nombre}</option>`; });
 
-            // Poner la fecha de hoy por defecto en los inputs
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('horario-fecha').value = hoy;
             document.getElementById('filtro-fecha').value = hoy;
+            document.getElementById('fecha-cobertura').value = hoy; // Fecha por defecto para cobertura
         }
 
         async function guardarHorario() {
@@ -236,9 +243,7 @@
 
             if(!agente_id || !fecha || !hora_inicio || !hora_fin) return alert("Llena todos los campos por favor.");
 
-            const { error } = await supabaseClient.from('plan_diario').insert([{
-                agente_id, fecha, hora_inicio, hora_fin, canal, tipo: 'turno'
-            }]);
+            const { error } = await supabaseClient.from('plan_diario').insert([{ agente_id, fecha, hora_inicio, hora_fin, canal, tipo: 'turno' }]);
 
             if (error) return alert("Error: " + error.message);
 
@@ -246,7 +251,6 @@
             msg.classList.remove('hidden');
             setTimeout(() => msg.classList.add('hidden'), 3000);
             
-            // Limpiar horas y recargar tabla
             document.getElementById('horario-inicio').value = '';
             document.getElementById('horario-fin').value = '';
             cargarHorariosDelDia();
@@ -284,7 +288,78 @@
             cargarHorariosDelDia();
         }
 
-        // --- LÓGICA DEL DASHBOARD Y PERSONAL (Mantenida) ---
+        // --- 👇 LÓGICA DE COBERTURA 👇 ---
+        async function cargarCobertura() {
+            const fecha = document.getElementById('fecha-cobertura').value;
+            const tabla = document.getElementById('tabla-cobertura');
+            const thead = document.querySelector('#vista-cobertura thead tr');
+
+            // 1. Definir las horas a mostrar (de 07:00 a 22:00)
+            const horasMostrar = Array.from({length: 16}, (_, i) => i + 7); // [7, 8, ..., 22]
+            
+            // Armar el encabezado de la tabla con las horas
+            thead.innerHTML = `<th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>`;
+            horasMostrar.forEach(h => {
+                thead.innerHTML += `<th class="px-2 py-2 border-r border-brand-mid bg-brand-mid text-xs">${h.toString().padStart(2, '0')}:00</th>`;
+            });
+            thead.innerHTML += `<th class="px-2 py-2 bg-brand-dark text-xs">Total</th>`;
+
+            // 2. Traer datos de Supabase
+            const { data: turnos } = await supabaseClient.from('plan_diario').select('*').eq('fecha', fecha);
+            const { data: ausencias } = await supabaseClient.from('ausencias').select('agente_id').eq('fecha', fecha);
+            
+            if (!turnos || turnos.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="18" class="px-6 py-8 text-center text-gray-400 font-bold">No hay turnos programados para esta fecha</td></tr>';
+                return;
+            }
+
+            // Crear un Set con los IDs de los agentes ausentes para búsquedas rápidas
+            const agentesAusentes = new Set(ausencias ? ausencias.map(a => a.agente_id) : []);
+
+            // Función auxiliar para convertir "HH:MM:SS" a minutos totales
+            const parseTime = (timeStr) => {
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            const canales = ['ccvox', 'pchat', 'correo', 'multicanal'];
+            tabla.innerHTML = '';
+
+            // 3. Calcular la matriz
+            canales.forEach(canal => {
+                let filaHTML = `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-3 text-left font-bold text-brand-dark sticky left-0 bg-white border-r">${canal.toUpperCase()}</td>`;
+                
+                let totalDiaCanal = 0;
+
+                horasMostrar.forEach(hora => {
+                    const horaInicioMin = hora * 60;
+                    const horaFinMin = (hora + 1) * 60;
+
+                    // Contar cuántos agentes están activos en esta hora para este canal
+                    const agentesActivos = turnos.filter(t => {
+                        if (t.canal !== canal) return false;
+                        if (agentesAusentes.has(t.agente_id)) return false; // Restar ausencias
+                        
+                        const tInicio = parseTime(t.hora_inicio);
+                        const tFin = parseTime(t.hora_fin);
+                        
+                        // El turno cubre esta hora si empieza antes o en la hora, y termina después
+                        return tInicio <= horaInicioMin && tFin > horaInicioMin;
+                    }).length;
+
+                    totalDiaCanal += agentesActivos;
+                    
+                    // Colorear celda si hay 0 agentes
+                    let bgClass = agentesActivos === 0 ? 'bg-red-50 text-red-400' : 'text-gray-700 font-bold';
+                    filaHTML += `<td class="px-2 py-3 text-center border-r ${bgClass}">${agentesActivos > 0 ? agentesActivos : '-'}</td>`;
+                });
+
+                filaHTML += `<td class="px-2 py-3 text-center font-extrabold text-brand-teal bg-brand-light">${totalDiaCanal}</td></tr>`;
+                tabla.innerHTML += filaHTML;
+            });
+        }
+
+        // --- LÓGICA DEL DASHBOARD Y PERSONAL ---
         const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const hoyStr = new Date().toISOString().split('T')[0];
 
