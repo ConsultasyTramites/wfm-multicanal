@@ -256,16 +256,29 @@
             verificarAdmin(data.user);
         }
 
-        async function verificarAdmin(user) {
-            const { data } = await supabaseClient.from('agentes').select('is_admin').eq('user_id', user.id).single();
-            if (data && data.is_admin === true) {
+               async function verificarAdmin(user) {
+            // Buscamos por correo electrónico, es más seguro que buscar por ID
+            const { data, error } = await supabaseClient
+                .from('agentes')
+                .select('is_admin')
+                .eq('email', user.email.toLowerCase());
+
+            // Si hay un error en la consulta, avisamos
+            if (error) {
+                alert("Error al verificar permisos: " + error.message);
+                return;
+            }
+
+            // Verificamos que el usuario exista y que is_admin sea true
+            if (data && data.length > 0 && data[0].is_admin === true) {
                 isAdmin = true;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 iniciarDashboard();
                 cargarSelectores();
             } else {
-                alert("Acceso denegado. No eres supervisor.");
+                // Si no es admin, le mostramos un mensaje más claro
+                alert(`Acceso denegado.\nEl usuario ${user.email} no tiene permisos de supervisor.`);
                 supabaseClient.auth.signOut();
             }
         }
