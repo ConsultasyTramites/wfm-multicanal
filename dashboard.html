@@ -121,17 +121,12 @@
                     <div class="px-6 py-4 border-b bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h3 class="text-lg font-bold text-brand-dark">Cobertura vs Requerimiento</h3>
-                            <p class="text-xs text-gray-500">Compara tus turnos actuales con las metas definidas.</p>
+                            <p class="text-xs text-gray-500">Calculado usando la Capacidad Efectiva (Ponderación por Experiencia).</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
                             <label class="text-sm font-bold text-gray-600">Fecha:</label>
                             <input type="date" id="fecha-cobertura" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarCobertura()">
-                            
-                            <!-- BOTÓN PARA ABRIR EL MODAL DE METAS -->
-                            <button onclick="abrirModalMetas()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm">
-                                ⚙️ Configurar Metas
-                            </button>
-                            
+                            <button onclick="abrirModalMetas()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm">⚙️ Configurar Metas</button>
                             <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600 shadow-sm">Actualizar</button>
                         </div>
                     </div>
@@ -151,10 +146,10 @@
                     </div>
 
                     <!-- LEYENDA DE COLORES -->
-                    <div class="px-6 py-3 bg-gray-50 border-t flex gap-4 text-xs font-bold text-gray-500 justify-end rounded-b-xl">
-                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-200 border border-red-400 rounded-sm"></div> Déficit (Falta gente)</div>
-                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-400 rounded-sm"></div> Cubierto (Suficiente)</div>
-                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-white border border-gray-300 rounded-sm"></div> Sin requerimiento</div>
+                    <div class="px-6 py-3 bg-gray-50 border-t flex flex-wrap gap-4 text-xs font-bold text-gray-500 justify-end rounded-b-xl">
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-200 border border-red-400 rounded-sm"></div> Déficit (Falta capacidad)</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-400 rounded-sm"></div> Cubierto</div>
+                        <div class="flex items-center gap-1 text-brand-dark border border-brand-teal px-2 py-1 rounded bg-brand-light">💡 Los decimales indican la ponderación (Senior = 1.2, Junior = 0.8)</div>
                     </div>
                 </div>
             </div>
@@ -168,7 +163,9 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Canal Base</th><th class="px-6 py-3">Nivel</th><th class="px-6 py-3">Correo</th></tr></thead>
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                <tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Canal Base</th><th class="px-6 py-3">Nivel</th><th class="px-6 py-3">Factor</th><th class="px-6 py-3">Correo</th></tr>
+                            </thead>
                             <tbody id="tabla-personal"></tbody>
                         </table>
                     </div>
@@ -177,7 +174,7 @@
         </main>
     </div>
 
-    <!-- MODAL PARA CONFIGURAR METAS (OCULTO POR DEFECTO) -->
+    <!-- MODAL PARA CONFIGURAR METAS -->
     <div id="modal-metas" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
@@ -202,7 +199,7 @@
         let isAdmin = false;
         let listaAgentesGlobal = [];
         const canales = ['ccvox', 'pchat', 'correo', 'multicanal'];
-        const horasMostrar = Array.from({length: 16}, (_, i) => i + 7); // 7 a 22
+        const horasMostrar = Array.from({length: 16}, (_, i) => i + 7); 
 
         supabaseClient.auth.getSession().then(({ data: { session } }) => { if (session) verificarAdmin(session.user); });
 
@@ -291,7 +288,7 @@
             const tabla = document.getElementById('tabla-horarios');
             
             const { data } = await supabaseClient.from('plan_diario')
-                .select('id, hora_inicio, hora_fin, canal, agentes(nombre)')
+                .select('id, hora_inicio, hora_fin, canal, agentes(nombre, factor_productividad)')
                 .eq('fecha', fechaFiltro)
                 .order('hora_inicio');
             
@@ -299,9 +296,10 @@
             if (data && data.length > 0) {
                 data.forEach(h => {
                     let colorCanal = h.canal === 'ccvox' ? 'bg-blue-100 text-blue-800' : (h.canal === 'pchat' ? 'bg-teal-100 text-teal-800' : 'bg-purple-100 text-purple-800');
+                    let factor = h.agentes?.factor_productividad || 1.0;
                     tabla.innerHTML += `
                         <tr class="bg-white border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 font-bold text-brand-dark">${h.agentes?.nombre}</td>
+                            <td class="px-6 py-4 font-bold text-brand-dark">${h.agentes?.nombre} <span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-1">F: ${factor}</span></td>
                             <td class="px-6 py-4 font-mono font-medium">${h.hora_inicio.substring(0,5)} - ${h.hora_fin.substring(0,5)}</td>
                             <td class="px-6 py-4"><span class="${colorCanal} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${h.canal}</span></td>
                             <td class="px-6 py-4"><button onclick="eliminarHorario('${h.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">Eliminar</button></td>
@@ -318,8 +316,8 @@
             cargarHorariosDelDia();
         }
 
-        // --- LÓGICA DE COBERTURA VS METAS ---
-        let metasGlobales = {}; // Para guardar los requerimientos temporalmente mientras se editan
+        // --- LÓGICA DE COBERTURA VS METAS CON PRODUCTIVIDAD ---
+        let metasGlobales = {}; 
 
         async function cargarCobertura() {
             const fecha = document.getElementById('fecha-cobertura').value;
@@ -332,12 +330,12 @@
             });
             thead.innerHTML += `<th class="px-2 py-2 bg-brand-dark text-xs">Total Req</th>`;
 
-            // Obtener Turnos
-            const { data: turnos } = await supabaseClient.from('plan_diario').select('*').eq('fecha', fecha);
-            // Obtener Ausencias
+            // Obtener Turnos CON el factor de productividad del agente
+            const { data: turnos } = await supabaseClient.from('plan_diario')
+                .select('*, agentes(factor_productividad)')
+                .eq('fecha', fecha);
+                
             const { data: ausencias } = await supabaseClient.from('ausencias').select('agente_id').eq('fecha', fecha);
-            
-            // Obtener Requerimientos (Metas)
             const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
             
             if (!turnos || turnos.length === 0) {
@@ -360,36 +358,44 @@
                 horasMostrar.forEach(hora => {
                     const horaInicioMin = hora * 60;
                     
-                    // Agentes reales
-                    const agentesActivos = turnos.filter(t => {
+                    // 1. Filtrar agentes activos en esta hora
+                    const agentesEnHora = turnos.filter(t => {
                         if (t.canal !== canal) return false;
                         if (agentesAusentes.has(t.agente_id)) return false;
                         const tInicio = parseTime(t.hora_inicio);
                         const tFin = parseTime(t.hora_fin);
                         return tInicio <= horaInicioMin && tFin > horaInicioMin;
-                    }).length;
+                    });
 
-                    // Requerimiento meta
+                    // 2. Sumar la capacidad efectiva (en lugar de contar personas)
+                    let capacidadEfectiva = 0;
+                    agentesEnHora.forEach(t => {
+                        capacidadEfectiva += (t.agentes?.factor_productividad || 1.0);
+                    });
+
+                    // Redondear a 1 decimal para que no se vea feo
+                    capacidadEfectiva = Math.round(capacidadEfectiva * 10) / 10;
+
                     const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
                     const req = reqObj ? reqObj.agentes_requeridos : 0;
                     totalReqCanal += req;
 
-                    // Lógica de colores
+                    // 3. Lógica de colores con la capacidad efectiva
                     let bgClass = 'bg-white';
                     let textClass = 'text-gray-400';
                     let displayText = `<span class="opacity-30">-</span>`;
 
                     if (req > 0) {
-                        if (agentesActivos >= req) {
+                        if (capacidadEfectiva >= req) {
                             bgClass = 'bg-green-100'; textClass = 'text-green-800 font-bold';
-                            displayText = `${agentesActivos} <span class="text-[10px] opacity-70">/ ${req}</span>`;
+                            displayText = `${capacidadEfectiva} <span class="text-[10px] opacity-70">/ ${req}</span>`;
                         } else {
                             bgClass = 'bg-red-200'; textClass = 'text-red-800 font-bold';
-                            displayText = `<span class="text-red-600 font-extrabold">${agentesActivos}</span> <span class="text-[10px] opacity-70">/ ${req}</span>`;
+                            displayText = `<span class="text-red-600 font-extrabold">${capacidadEfectiva}</span> <span class="text-[10px] opacity-70">/ ${req}</span>`;
                         }
-                    } else if (agentesActivos > 0) {
+                    } else if (capacidadEfectiva > 0) {
                         textClass = 'text-gray-800 font-bold';
-                        displayText = `${agentesActivos} <span class="text-[10px] text-gray-400 font-normal">/ 0</span>`;
+                        displayText = `${capacidadEfectiva} <span class="text-[10px] text-gray-400 font-normal">/ 0</span>`;
                     }
 
                     filaHTML += `<td class="px-2 py-3 text-center border-r ${bgClass} ${textClass}">${displayText}</td>`;
@@ -406,7 +412,6 @@
             const modal = document.getElementById('modal-metas');
             const contenedor = document.getElementById('contenedor-inputs-metas');
             
-            // Buscar metas actuales
             const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
             metasGlobales = {};
             
@@ -425,7 +430,7 @@
                 horasMostrar.forEach(hora => {
                     const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
                     const val = reqObj ? reqObj.agentes_requeridos : 0;
-                    metasGlobales[`${canal}-${hora}`] = val; // Guardar valor inicial
+                    metasGlobales[`${canal}-${hora}`] = val;
                     
                     htmlTabla += `<td class="p-1 border">
                         <input type="number" min="0" max="50" value="${val}" 
@@ -446,8 +451,6 @@
 
         async function guardarMetas() {
             const fecha = document.getElementById('fecha-cobertura').value;
-            
-            // Preparar el arreglo de datos para insertar/actualizar
             let datosGuardar = [];
             for (const [key, val] of Object.entries(metasGlobales)) {
                 if (val > 0) {
@@ -461,7 +464,6 @@
                 }
             }
 
-            // Borrar metas antiguas de esa fecha y insertar las nuevas
             await supabaseClient.from('requerimiento_cobertura').delete().eq('fecha', fecha);
             
             if (datosGuardar.length > 0) {
@@ -470,7 +472,7 @@
             }
 
             cerrarModalMetas();
-            cargarCobertura(); // Recargar tabla con los nuevos colores
+            cargarCobertura();
         }
 
         // --- LÓGICA DEL DASHBOARD Y PERSONAL ---
@@ -525,7 +527,19 @@
             const tabla = document.getElementById('tabla-personal');
             tabla.innerHTML = '';
             data.forEach(agente => {
-                tabla.innerHTML += `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td><td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td><td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td><td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td><td class="px-6 py-4 text-xs text-gray-500">${agente.email || '-'}</td></tr>`;
+                // Agregamos el badge del factor de productividad
+                let factor = agente.factor_productividad || 1.0;
+                let colorFactor = factor >= 1.1 ? 'bg-green-100 text-green-800' : (factor <= 0.9 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800');
+                
+                tabla.innerHTML += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td>
+                        <td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td>
+                        <td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td>
+                        <td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td>
+                        <td class="px-6 py-4"><span class="${colorFactor} text-xs font-bold px-2 py-1 rounded">${factor}</span></td>
+                        <td class="px-6 py-4 text-xs text-gray-500">${agente.email || '-'}</td>
+                    </tr>`;
             });
         }
 
