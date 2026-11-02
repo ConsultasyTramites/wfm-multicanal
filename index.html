@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        tailwind.config = { theme: { extend: { colors: { brand: { dark: '#001E54', mid: '#004F7A', teal: '#00A29F' } } } } }
+        tailwind.config = { theme: { extend: { colors: { brand: { dark: '#001E54', mid: '#004F7A', teal: '#00A29F', light: '#E6F6F6' } } } } }
     </script>
 </head>
 <body class="bg-gray-100 font-sans p-4 flex items-center justify-center min-h-screen">
@@ -38,13 +38,23 @@
 
     <!-- VISTA 2: APP (Oculta por defecto) -->
     <div id="app-screen" class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark hidden">
-        <div class="flex justify-between items-center mb-6 pb-4 border-b">
+        <div class="flex justify-between items-center mb-4 pb-4 border-b">
             <div>
                 <p class="text-xs text-gray-500 font-bold uppercase">Bienvenido(a)</p>
                 <h1 class="text-lg font-extrabold text-brand-dark" id="nombre-agente">Cargando...</h1>
             </div>
             <button onclick="cerrarSesion()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1.5 rounded hover:bg-red-100 transition">Salir</button>
         </div>
+
+        <!-- 👇 NUEVO RECUADRO: HORARIO DEL DÍA 👇 -->
+        <div class="mb-5 p-4 bg-brand-light rounded-lg border border-brand-teal/30 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-xs font-bold text-brand-teal uppercase tracking-wider mb-1">Mi turno de hoy</p>
+                <p class="text-sm font-bold text-brand-dark" id="horario-info">Cargando horario...</p>
+            </div>
+            <div class="text-2xl">📅</div>
+        </div>
+        <!-- 👆 FIN DEL NUEVO RECUADRO 👆 -->
 
         <div class="mb-5">
             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Auxiliares (Pausas)</p>
@@ -120,9 +130,28 @@
             if (data) {
                 agenteActualId = data.id;
                 document.getElementById('nombre-agente').textContent = data.nombre;
+
+                // 👇 NUEVA LÓGICA: CARGAR HORARIO DEL DÍA 👇
+                const fechaHoy = new Date().toISOString().split('T')[0];
+                const { data: horario } = await supabaseClient.from('plan_diario')
+                    .select('hora_inicio, hora_fin, canal')
+                    .eq('agente_id', agenteActualId)
+                    .eq('fecha', fechaHoy)
+                    .single();
+
+                const infoHorario = document.getElementById('horario-info');
+                if (horario) {
+                    infoHorario.innerHTML = `<span class="text-brand-teal font-extrabold text-base">${horario.hora_inicio} - ${horario.hora_fin}</span> | Canal: <span class="uppercase font-bold">${horario.canal}</span>`;
+                } else {
+                    infoHorario.textContent = "Día libre / No asignado";
+                    infoHorario.classList.add('text-gray-400');
+                }
+                // 👆 FIN DE LA NUEVA LÓGICA 👆
+
             } else {
                 // Si el correo no está en la tabla agentes, lo tratamos como admin (para pruebas)
                 document.getElementById('nombre-agente').textContent = "Supervisor / Admin";
+                document.getElementById('horario-info').textContent = "Modo Administrador";
             }
         }
 
