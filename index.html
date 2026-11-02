@@ -3,89 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WFM Multicanal - Dashboard</title>
-    <!-- Tailwind CSS para diseño responsivo -->
+    <title>WFM Acarrion - Asesores</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { brand: { dark: '#001E54', mid: '#004F7A', teal: '#00A29F' } } } } }
+    </script>
 </head>
-<body class="bg-gray-100 font-sans p-4">
-    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-2xl font-bold text-blue-600 mb-4 text-center">WFM Acarrion</h1>
+<body class="bg-gray-100 font-sans p-4 flex items-center justify-center min-h-screen">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark">
+        
+        <!-- Encabezado simulando el Logo -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-brand-dark tracking-tighter">carrión</h1>
+            <p class="text-brand-teal font-semibold tracking-[0.3em] text-xs">EDUCACIÓN SUPERIOR</p>
+        </div>
         
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2">Seleccionar Agente:</label>
-            <select id="agenteSelect" class="w-full border rounded p-2 text-sm">
+            <select id="agenteSelect" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50">
                 <option value="">Cargando agentes...</option>
             </select>
         </div>
 
-        <div class="flex space-x-2 mb-6">
-            <button onclick="registrarEvento('baño')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded w-1/2 text-sm">
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <button onclick="registrarEvento('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm">
                 🚽 Ir al Baño
             </button>
-            <button onclick="registrarEvento('falta')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded w-1/2 text-sm">
-                ❌ Registrar Falta
+            <button onclick="volverDelBaño()" class="bg-brand-mid hover:bg-blue-800 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm">
+                ✅ Volver del Baño
             </button>
         </div>
+        
+        <button onclick="registrarEvento('falta')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors shadow-sm">
+            ❌ Registrar Falta
+        </button>
 
-        <div id="mensaje" class="text-sm text-center font-bold text-green-600 hidden"></div>
+        <div id="mensaje" class="mt-4 text-sm text-center font-bold text-green-600 hidden p-2 bg-green-50 rounded border border-green-200"></div>
     </div>
 
-      <script>
-        // Conectamos con Supabase (Nota el nombre 'supabaseClient')
+    <script>
         const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
         const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s'; 
-        
-        // ¡Aquí estaba el error! Ahora se llama supabaseClient
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 1. Cargar los agentes al abrir la página
         async function cargarAgentes() {
             const { data, error } = await supabaseClient.from('agentes').select('id, nombre, codigo').order('nombre');
             const select = document.getElementById('agenteSelect');
-            
-            if (error) {
-                console.error('Error:', error);
-                select.innerHTML = '<option>Error al cargar</option>';
-                return;
-            }
-
-            select.innerHTML = '<option value="">-- Seleccione un agente --</option>';
+            if (error) return console.error(error);
+            select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
             data.forEach(agente => {
                 select.innerHTML += `<option value="${agente.id}" data-nombre="${agente.nombre}">${agente.nombre}</option>`;
             });
         }
 
-        // 2. Función para enviar el evento a la base de datos
+        function mostrarMensaje(texto, color = "green") {
+            const msgDiv = document.getElementById('mensaje');
+            msgDiv.textContent = texto;
+            msgDiv.className = `mt-4 text-sm text-center font-bold text-${color}-600 hidden p-2 bg-${color}-50 rounded border border-${color}-200`;
+            msgDiv.classList.remove('hidden');
+            setTimeout(() => msgDiv.classList.add('hidden'), 3000);
+        }
+
         async function registrarEvento(tipo) {
             const select = document.getElementById('agenteSelect');
             const agenteId = select.value;
-            const agenteNombre = select.options[select.selectedIndex].getAttribute('data-nombre');
-
-            if (!agenteId) {
-                alert("Por favor, selecciona un agente primero.");
-                return;
-            }
-
+            if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
+            
             const fechaHoy = new Date().toISOString().split('T')[0];
 
             if (tipo === 'falta') {
-                const { error } = await supabaseClient.from('ausencias').insert([
-                    { agente_id: agenteId, fecha: fechaHoy, tipo: 'falta', motivo: 'Registrado desde Web App' }
-                ]);
-                if (error) return alert("Error al guardar: " + error.message);
+                const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteId, fecha: fechaHoy, tipo: 'falta', motivo: 'Web App' }]);
+                if (error) return alert("Error: " + error.message);
+                mostrarMensaje("Falta registrada correctamente");
             } else if (tipo === 'baño') {
-                const { error } = await supabaseClient.from('status_events').insert([
-                    { agente_id: agenteId, estado: 'baño' }
-                ]);
-                if (error) return alert("Error al guardar: " + error.message);
+                const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteId, estado: 'baño' }]);
+                if (error) return alert("Error: " + error.message);
+                mostrarMensaje("Salida al baño registrada");
             }
+        }
 
-            const msgDiv = document.getElementById('mensaje');
-            msgDiv.textContent = `✅ Registro de ${tipo} guardado para ${agenteNombre}`;
-            msgDiv.classList.remove('hidden');
-            setTimeout(() => msgDiv.classList.add('hidden'), 3000);
+        async function volverDelBaño() {
+            const select = document.getElementById('agenteSelect');
+            const agenteId = select.value;
+            if (!agenteId) return alert("Por favor, selecciona tu nombre primero.");
+
+            // Buscamos el registro de baño abierto (sin hora de fin) y le ponemos la hora actual
+            const { error } = await supabaseClient
+                .from('status_events')
+                .update({ fin: new Date().toISOString() })
+                .eq('agente_id', agenteId)
+                .eq('estado', 'baño')
+                .is('fin', null);
+
+            if (error) return alert("Error: " + error.message);
+            mostrarMensaje("Regreso del baño registrado", "blue");
         }
 
         cargarAgentes();
