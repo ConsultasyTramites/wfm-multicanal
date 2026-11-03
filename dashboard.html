@@ -41,6 +41,8 @@
                 <button onclick="cambiarPestana('horarios')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📅 Horarios</button>
                 <button onclick="cambiarPestana('cobertura')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📈 Cobertura</button>
                 <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
+                <!-- NUEVO BOTÓN INSIGHTS -->
+                <button onclick="cambiarPestana('insights')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">💡 Insights</button>
             </nav>
             <div class="p-4 border-t border-brand-mid">
                 <button onclick="cerrarSesionAdmin()" class="w-full text-xs font-bold text-red-300 hover:text-white bg-red-900/30 py-2 rounded">Cerrar Sesión</button>
@@ -50,7 +52,6 @@
         <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50">
             <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
                 <h2 class="text-2xl font-bold text-brand-dark" id="titulo-pestana">Dashboard General</h2>
-                <!-- AQUÍ ESTÁ EL BOTÓN DE VOZ CORREGIDO -->
                 <div class="flex items-center space-x-4">
                     <button id="btn-voz" onclick="toggleVoz()" class="text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition">
                         🔊 Voz: ON
@@ -173,6 +174,49 @@
                             </thead>
                             <tbody id="tabla-personal"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 👇 NUEVA VISTA INSIGHTS 👇 -->
+            <div id="vista-insights" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Tendencias y Comparaciones -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">📈 Tendencia de Ausentismo (Mes)</h3>
+                        <div id="insight-tendencia" class="flex items-end gap-4">
+                            <!-- Se llena con JS -->
+                        </div>
+                    </div>
+
+                    <!-- Canales Críticos -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">🚨 Canal Más Crítico</h3>
+                        <div id="insight-canal" class="flex items-center gap-4">
+                            <!-- Se llena con JS -->
+                        </div>
+                    </div>
+
+                    <!-- Horarios con Riesgo -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">⏰ Horarios de Mayor Riesgo</h3>
+                        <div id="insight-horarios" class="space-y-2">
+                            <!-- Se llena con JS -->
+                        </div>
+                    </div>
+
+                    <!-- Recomendaciones y Relación Faltas/Cobertura (Ocupa 2 columnas) -->
+                    <div class="bg-brand-dark text-white rounded-xl shadow-sm p-6 md:col-span-2 lg:col-span-3 relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h3 class="text-lg font-bold text-brand-teal mb-2">🧠 Recomendaciones Operativas Automáticas</h3>
+                            <p class="text-sm text-gray-300 mb-4">Basado en el cruce de datos de faltas, horarios y cobertura.</p>
+                            <ul id="insight-recomendaciones" class="space-y-3 text-sm">
+                                <!-- Se llena con JS -->
+                            </ul>
+                        </div>
+                        <!-- Icono de fondo decorativo -->
+                        <div class="absolute right-0 bottom-0 opacity-10 text-9xl">💡</div>
                     </div>
                 </div>
             </div>
@@ -330,7 +374,8 @@
         async function cerrarSesionAdmin() { await supabaseClient.auth.signOut(); location.reload(); }
 
         function cambiarPestana(pestana) {
-            ['dashboard', 'personal', 'horarios', 'cobertura'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
+            // AGREGADO 'insights' A LA LISTA
+            ['dashboard', 'personal', 'horarios', 'cobertura', 'insights'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
             document.getElementById(`vista-${pestana}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('bg-brand-mid', 'text-white');
@@ -338,12 +383,15 @@
             });
             event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
             event.target.classList.add('bg-brand-mid', 'text-white');
-            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura' };
+            
+            // AGREGADO TITULO INSIGHTS
+            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura', insights: 'Insights WFM' };
             document.getElementById('titulo-pestana').textContent = titulos[pestana];
             
             if (pestana === 'personal') cargarPersonal();
             if (pestana === 'horarios') cargarHorariosDelDia();
             if (pestana === 'cobertura') cargarCobertura();
+            if (pestana === 'insights') cargarInsights(); // LLAMADA A LA NUEVA FUNCIÓN
         }
 
         // --- LÓGICA DE HORARIOS ---
@@ -700,7 +748,7 @@
                     agentesNotificadosPorVoz.delete(id);
                 }
             });
-        } // <--- ESTA LLAVE FALTABA Y ES LA QUE ARREGLA EL ERROR
+        } 
 
         async function cargarPersonal() {
             const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
@@ -811,6 +859,88 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // --- 👇 NUEVA FUNCIÓN PARA INSIGHTS 👇 ---
+        async function cargarInsights() {
+            // 1. Tendencias
+            const { data: tendencia } = await supabaseClient.from('vista_tendencia_ausentismo').select('*').single();
+            const divTendencia = document.getElementById('insight-tendencia');
+            if (tendencia) {
+                let actual = tendencia.actual || 0;
+                let anterior = tendencia.anterior || 0;
+                let diferencia = actual - anterior;
+                let color = diferencia > 0 ? 'text-red-500' : (diferencia < 0 ? 'text-green-500' : 'text-gray-500');
+                let icono = diferencia > 0 ? '📈' : (diferencia < 0 ? '📉' : '➡️');
+                let texto = diferencia === 0 ? 'Igual que el mes pasado' : (diferencia > 0 ? `+${diferencia} más que el mes pasado` : `${Math.abs(diferencia)} menos que el mes pasado`);
+                
+                divTendencia.innerHTML = `
+                    <div>
+                        <p class="text-4xl font-extrabold text-brand-dark">${actual}</p>
+                        <p class="text-xs text-gray-500 font-bold">Faltas este mes</p>
+                    </div>
+                    <div class="mb-1 ${color}">
+                        <p class="text-xl font-bold">${icono} ${anterior}</p>
+                        <p class="text-[10px] font-bold">Mes anterior</p>
+                    </div>
+                    <p class="text-xs font-bold ${color} mb-1">${texto}</p>
+                `;
+            }
+
+            // 2. Canales Críticos
+            const { data: canales } = await supabaseClient.from('vista_canales_criticos').select('*').limit(1);
+            const divCanal = document.getElementById('insight-canal');
+            if (canales && canales.length > 0) {
+                const canalTop = canales[0];
+                divCanal.innerHTML = `
+                    <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl font-bold">
+                        ${canalTop.canal_principal.substring(0,2).toUpperCase()}
+                    </div>
+                    <div>
+                        <p class="text-xl font-extrabold text-brand-dark uppercase">${canalTop.canal_principal}</p>
+                        <p class="text-sm text-gray-500">Lleva <strong class="text-red-500">${canalTop.total_faltas} ausencias</strong> este mes.</p>
+                    </div>
+                `;
+            } else {
+                divCanal.innerHTML = '<p class="text-green-500 font-bold text-sm">Todo bajo control. No hay ausencias.</p>';
+            }
+
+            // 3. Horarios de Riesgo
+            const { data: horarios } = await supabaseClient.from('vista_horarios_riesgo').select('*');
+            const divHorarios = document.getElementById('insight-horarios');
+            if (horarios && horarios.length > 0) {
+                divHorarios.innerHTML = '';
+                horarios.forEach(h => {
+                    divHorarios.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100">
+                            <span class="font-bold text-gray-700 text-sm">Turnos que inician a las ${h.hora_inicio_turno}:00</span>
+                            <span class="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-1 rounded">${h.total_faltas} faltas</span>
+                        </div>
+                    `;
+                });
+            } else {
+                divHorarios.innerHTML = '<p class="text-gray-400 text-sm">No hay suficientes datos.</p>';
+            }
+
+            // 4. Recomendaciones Operativas
+            const divRecomendaciones = document.getElementById('insight-recomendaciones');
+            let recomendaciones = [];
+
+            if (tendencia && tendencia.actual > tendencia.anterior) {
+                recomendaciones.push(`⚠️ El ausentismo ha subido. Revisa si hay algún factor externo (clima, exámenes, etc.) afectando al equipo.`);
+            }
+            if (canales && canales.length > 0) {
+                recomendaciones.push(`🎯 El canal <strong>${canales[0].canal_principal.toUpperCase()}</strong> es el más afectado. Te sugerimos priorizar la asignación de agentes Senior a este canal mañana.`);
+            }
+            if (horarios && horarios.length > 0) {
+                recomendaciones.push(`⏰ Los turnos que inician a las <strong>${horarios[0].hora_inicio_turno}:00</strong> tienen el mayor índice de faltas. Considera tener 1 agente "volante" (multicanal) en ese horario.`);
+            }
+            
+            if (recomendaciones.length === 0) {
+                recomendaciones.push(`✅ La operación se mantiene estable. Mantén el monitoreo de las alertas de Telegram para reaccionar rápido.`);
+            }
+
+            divRecomendaciones.innerHTML = recomendaciones.map(r => `<li class="flex items-start gap-2"><span class="text-brand-teal mt-1">•</span> <span>${r}</span></li>`).join('');
         }
 
         function iniciarDashboard() {
