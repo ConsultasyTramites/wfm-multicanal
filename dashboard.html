@@ -65,15 +65,13 @@
                 </div>
             </header>
 
-            <!-- VISTA DASHBOARD -->
+            <!-- VISTA DASHBOARD (RESTAURADA CORRECTAMENTE) -->
             <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Total Agentes</p><p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p></div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Ausencias Hoy</p><p class="text-4xl font-extrabold text-red-500" id="kpi-ausencias">0</p></div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
-                        <div class="px-6 py-4 border-b bg-orange-50/50"><h3 class="text-lg font-bold text-orange-600">⏱️ Auxiliares Activos</h3></div>
-                        <div class="p-4 space-y-3 overflow-y-auto flex-1" id="lista-auxiliares"></div>
-                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-400"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">En Auxiliar</p><p class="text-4xl font-extrabold text-orange-400" id="kpi-auxiliares">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Disponibles</p><p class="text-4xl font-extrabold text-green-500" id="kpi-disponibles">0</p></div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -84,6 +82,10 @@
                                 <tbody id="tabla-registros"></tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                        <div class="px-6 py-4 border-b bg-orange-50/50"><h3 class="text-lg font-bold text-orange-600">⏱️ Auxiliares Activos</h3></div>
+                        <div class="p-4 space-y-3 overflow-y-auto flex-1" id="lista-auxiliares"></div>
                     </div>
                 </div>
             </div>
@@ -361,10 +363,11 @@
                 </div>
             </div>
             <!-- 👆 FIN VISTA SIMULADOR 👆 -->
+
         </main>
     </div>
 
-    <!-- MODAL PARA CONFIGURAR METAS -->
+    <!-- MODALES -->
     <div id="modal-metas" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
@@ -379,7 +382,6 @@
         </div>
     </div>
 
-    <!-- MODAL PARA EDITAR AGENTE -->
     <div id="modal-editar-agente" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
@@ -399,7 +401,6 @@
         </div>
     </div>
 
-    <!-- MODAL PARA ASIGNACIÓN MASIVA -->
     <div id="modal-masivo" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-brand-dark text-white rounded-t-xl">
@@ -1134,7 +1135,7 @@
             }
         }
 
-        // --- 👇 LÓGICA SIMULADOR WFM 👇 ---
+        // --- LÓGICA SIMULADOR WFM ---
         let datosSimulacion = {
             turnosBase: [],
             ausenciasSimuladas: [], 
@@ -1267,10 +1268,7 @@
                 horasMostrar.forEach(hora => {
                     const horaInicioMin = hora * 60;
                     
-                    // 1. Calcular Realidad
                     const capReal = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, []);
-
-                    // 2. Calcular Simulación (Turnos Base - Ausencias + Refuerzos)
                     let capSim = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, datosSimulacion.ausenciasSimuladas);
                     
                     datosSimulacion.refuerzosSimulados.forEach(r => {
@@ -1284,11 +1282,9 @@
                     });
                     capSim = Math.round(capSim * 10) / 10;
 
-                    // 3. Obtener Requerimiento
                     const reqObj = datosSimulacion.requerimientos.find(req => req.canal === canal && req.hora === hora);
                     const req = reqObj ? reqObj.agentes_requeridos : 0;
 
-                    // 4. Evaluar Impacto
                     let textClass = 'text-gray-400';
                     let displayText = `<span class="opacity-30">-</span>`;
                     let bgClass = 'bg-white';
