@@ -41,7 +41,6 @@
                 <button onclick="cambiarPestana('horarios')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📅 Horarios</button>
                 <button onclick="cambiarPestana('cobertura')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📈 Cobertura</button>
                 <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
-                <!-- NUEVO BOTÓN INSIGHTS -->
                 <button onclick="cambiarPestana('insights')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">💡 Insights</button>
             </nav>
             <div class="p-4 border-t border-brand-mid">
@@ -178,36 +177,45 @@
                 </div>
             </div>
 
-            <!-- 👇 NUEVA VISTA INSIGHTS 👇 -->
+            <!-- VISTA INSIGHTS -->
             <div id="vista-insights" class="p-6 max-w-7xl mx-auto w-full hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cambiamos a 4 columnas para acomodar la nueva tarjeta -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     
-                    <!-- Tendencias y Comparaciones -->
+                    <!-- Tendencias -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">📈 Tendencia de Ausentismo (Mes)</h3>
-                        <div id="insight-tendencia" class="flex items-end gap-4">
-                            <!-- Se llena con JS -->
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">📈 Tendencia Ausentismo</h3>
+                        <div id="insight-tendencia" class="flex flex-col gap-2">
+                            <!-- JS -->
                         </div>
                     </div>
 
                     <!-- Canales Críticos -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">🚨 Canal Más Crítico</h3>
-                        <div id="insight-canal" class="flex items-center gap-4">
-                            <!-- Se llena con JS -->
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">🚨 Canal Crítico</h3>
+                        <div id="insight-canal" class="flex flex-col gap-2">
+                            <!-- JS -->
                         </div>
                     </div>
 
                     <!-- Horarios con Riesgo -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">⏰ Horarios de Mayor Riesgo</h3>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">⏰ Horarios de Riesgo</h3>
                         <div id="insight-horarios" class="space-y-2">
-                            <!-- Se llena con JS -->
+                            <!-- JS -->
                         </div>
                     </div>
 
-                    <!-- Recomendaciones y Relación Faltas/Cobertura (Ocupa 2 columnas) -->
-                    <div class="bg-brand-dark text-white rounded-xl shadow-sm p-6 md:col-span-2 lg:col-span-3 relative overflow-hidden">
+                    <!-- NUEVA TARJETA: Impacto en Cobertura -->
+                    <div class="bg-white rounded-xl shadow-sm border border-red-100 p-6 relative overflow-hidden">
+                        <h3 class="text-sm font-bold text-red-400 uppercase tracking-wider mb-4">💸 Horas Perdidas</h3>
+                        <div id="insight-impacto" class="flex flex-col gap-3">
+                            <!-- JS -->
+                        </div>
+                    </div>
+
+                    <!-- Recomendaciones (Ocupa 4 columnas) -->
+                    <div class="bg-brand-dark text-white rounded-xl shadow-sm p-6 md:col-span-2 lg:col-span-4 relative overflow-hidden">
                         <div class="relative z-10">
                             <h3 class="text-lg font-bold text-brand-teal mb-2">🧠 Recomendaciones Operativas Automáticas</h3>
                             <p class="text-sm text-gray-300 mb-4">Basado en el cruce de datos de faltas, horarios y cobertura.</p>
@@ -215,7 +223,6 @@
                                 <!-- Se llena con JS -->
                             </ul>
                         </div>
-                        <!-- Icono de fondo decorativo -->
                         <div class="absolute right-0 bottom-0 opacity-10 text-9xl">💡</div>
                     </div>
                 </div>
@@ -304,7 +311,7 @@
     <script>
         // --- LÓGICA DE VOZ ---
         let vozActivada = true;
-        const agentesNotificadosPorVoz = new Set(); // Memoria para no repetir el mensaje
+        const agentesNotificadosPorVoz = new Set(); 
 
         function toggleVoz() {
             vozActivada = !vozActivada;
@@ -315,7 +322,7 @@
             } else {
                 btn.innerHTML = "🔇 Voz: OFF";
                 btn.classList.add('text-red-600', 'bg-red-50', 'border-red-300');
-                window.speechSynthesis.cancel(); // Detiene cualquier voz en curso
+                window.speechSynthesis.cancel(); 
             }
         }
 
@@ -324,9 +331,9 @@
             if (!('speechSynthesis' in window)) return alert("Tu navegador no soporta la síntesis de voz.");
 
             const mensaje = new SpeechSynthesisUtterance(texto);
-            mensaje.lang = 'es-ES'; // Idioma español
-            mensaje.rate = 1.0;     // Velocidad normal
-            mensaje.pitch = 1.0;    // Tono normal
+            mensaje.lang = 'es-ES'; 
+            mensaje.rate = 1.0;     
+            mensaje.pitch = 1.0;    
             
             window.speechSynthesis.speak(mensaje);
         }
@@ -374,7 +381,6 @@
         async function cerrarSesionAdmin() { await supabaseClient.auth.signOut(); location.reload(); }
 
         function cambiarPestana(pestana) {
-            // AGREGADO 'insights' A LA LISTA
             ['dashboard', 'personal', 'horarios', 'cobertura', 'insights'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
             document.getElementById(`vista-${pestana}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -384,14 +390,13 @@
             event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
             event.target.classList.add('bg-brand-mid', 'text-white');
             
-            // AGREGADO TITULO INSIGHTS
             const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura', insights: 'Insights WFM' };
             document.getElementById('titulo-pestana').textContent = titulos[pestana];
             
             if (pestana === 'personal') cargarPersonal();
             if (pestana === 'horarios') cargarHorariosDelDia();
             if (pestana === 'cobertura') cargarCobertura();
-            if (pestana === 'insights') cargarInsights(); // LLAMADA A LA NUEVA FUNCIÓN
+            if (pestana === 'insights') cargarInsights(); 
         }
 
         // --- LÓGICA DE HORARIOS ---
@@ -718,7 +723,7 @@
             }
             const listaAux = document.getElementById('lista-auxiliares');
             listaAux.innerHTML = '';
-            const idsActivosAhora = new Set(); // Para limpiar la memoria
+            const idsActivosAhora = new Set(); 
 
             if (activos && activos.length > 0) {
                 activos.forEach(a => {
@@ -731,18 +736,16 @@
                     
                     idsActivosAhora.add(a.agente_id);
 
-                    // LÓGICA DE VOZ: Si excede el límite y no ha sido notificado, habla.
                     if (minutos >= limite && !agentesNotificadosPorVoz.has(a.agente_id)) {
                         const nombre = a.agentes?.nombre || "Un agente";
                         hablar(`Atención. ${nombre} lleva ${minutos} minutos en ${a.estado}.`);
-                        agentesNotificadosPorVoz.add(a.agente_id); // Lo anotamos para no repetirlo
+                        agentesNotificadosPorVoz.add(a.agente_id); 
                     }
                 });
             } else {
                 listaAux.innerHTML = '<p class="text-sm text-gray-400 text-center py-6 font-medium">Todos en línea ✨</p>';
             }
 
-            // Limpiar la memoria: Si un agente ya regresó (no está en la lista de activos), lo borramos para que pueda ser notificado de nuevo en el futuro.
             Array.from(agentesNotificadosPorVoz).forEach(id => {
                 if (!idsActivosAhora.has(id)) {
                     agentesNotificadosPorVoz.delete(id);
@@ -833,7 +836,7 @@
             cerrarModalEditarAgente();
         }
 
-        // --- NUEVA FUNCIÓN PARA EXPORTAR A CSV/EXCEL ---
+        // --- FUNCIÓN PARA EXPORTAR A CSV/EXCEL ---
         function descargarCSV(idTabla, nombreArchivo) {
             const tabla = document.getElementById(idTabla);
             if (!tabla) return;
@@ -861,7 +864,7 @@
             document.body.removeChild(link);
         }
 
-        // --- 👇 NUEVA FUNCIÓN PARA INSIGHTS 👇 ---
+        // --- LÓGICA INSIGHTS (INCLUYE HORAS PERDIDAS) ---
         async function cargarInsights() {
             // 1. Tendencias
             const { data: tendencia } = await supabaseClient.from('vista_tendencia_ausentismo').select('*').single();
@@ -879,11 +882,10 @@
                         <p class="text-4xl font-extrabold text-brand-dark">${actual}</p>
                         <p class="text-xs text-gray-500 font-bold">Faltas este mes</p>
                     </div>
-                    <div class="mb-1 ${color}">
-                        <p class="text-xl font-bold">${icono} ${anterior}</p>
-                        <p class="text-[10px] font-bold">Mes anterior</p>
+                    <div class="mt-2 ${color}">
+                        <p class="text-sm font-bold">${icono} ${anterior} (Mes anterior)</p>
+                        <p class="text-xs font-bold">${texto}</p>
                     </div>
-                    <p class="text-xs font-bold ${color} mb-1">${texto}</p>
                 `;
             }
 
@@ -893,12 +895,14 @@
             if (canales && canales.length > 0) {
                 const canalTop = canales[0];
                 divCanal.innerHTML = `
-                    <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl font-bold">
-                        ${canalTop.canal_principal.substring(0,2).toUpperCase()}
-                    </div>
-                    <div>
-                        <p class="text-xl font-extrabold text-brand-dark uppercase">${canalTop.canal_principal}</p>
-                        <p class="text-sm text-gray-500">Lleva <strong class="text-red-500">${canalTop.total_faltas} ausencias</strong> este mes.</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold">
+                            ${canalTop.canal_principal.substring(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                            <p class="text-lg font-extrabold text-brand-dark uppercase">${canalTop.canal_principal}</p>
+                            <p class="text-xs text-gray-500">Lleva <strong class="text-red-500">${canalTop.total_faltas} ausencias</strong> este mes.</p>
+                        </div>
                     </div>
                 `;
             } else {
@@ -913,8 +917,8 @@
                 horarios.forEach(h => {
                     divHorarios.innerHTML += `
                         <div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100">
-                            <span class="font-bold text-gray-700 text-sm">Turnos que inician a las ${h.hora_inicio_turno}:00</span>
-                            <span class="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-1 rounded">${h.total_faltas} faltas</span>
+                            <span class="font-bold text-gray-700 text-[11px]">Turnos que inician a las ${h.hora_inicio_turno}:00</span>
+                            <span class="bg-orange-200 text-orange-800 text-[10px] font-bold px-2 py-1 rounded">${h.total_faltas} faltas</span>
                         </div>
                     `;
                 });
@@ -922,7 +926,29 @@
                 divHorarios.innerHTML = '<p class="text-gray-400 text-sm">No hay suficientes datos.</p>';
             }
 
-            // 4. Recomendaciones Operativas
+            // 4. Impacto en Cobertura (Horas Perdidas)
+            const { data: impacto } = await supabaseClient.from('vista_impacto_cobertura').select('*').single();
+            const divImpacto = document.getElementById('insight-impacto');
+            if (impacto) {
+                divImpacto.innerHTML = `
+                    <div>
+                        <p class="text-4xl font-extrabold text-brand-dark">${impacto.horas_totales_perdidas} <span class="text-lg text-gray-500">hrs</span></p>
+                        <p class="text-xs text-gray-500 font-bold mb-2">Total de horas de trabajo perdidas.</p>
+                    </div>
+                    <div class="flex gap-2 text-xs font-bold mt-auto">
+                        <div class="bg-red-50 text-red-700 p-2 rounded flex-1 border border-red-100">
+                            <p class="text-[9px] uppercase opacity-70">Por Faltas</p>
+                            <p>${impacto.horas_faltas} hrs</p>
+                        </div>
+                        <div class="bg-orange-50 text-orange-700 p-2 rounded flex-1 border border-orange-100">
+                            <p class="text-[9px] uppercase opacity-70">Exceso Aux.</p>
+                            <p>${impacto.horas_auxiliares} hrs</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 5. Recomendaciones Operativas
             const divRecomendaciones = document.getElementById('insight-recomendaciones');
             let recomendaciones = [];
 
@@ -933,7 +959,7 @@
                 recomendaciones.push(`🎯 El canal <strong>${canales[0].canal_principal.toUpperCase()}</strong> es el más afectado. Te sugerimos priorizar la asignación de agentes Senior a este canal mañana.`);
             }
             if (horarios && horarios.length > 0) {
-                recomendaciones.push(`⏰ Los turnos que inician a las <strong>${horarios[0].hora_inicio_turno}:00</strong> tienen el mayor índice de faltas. Considera tener 1 agente "volante" (multicanal) en ese horario.`);
+                recomendaciones.push(`⏰ Los turnos que inician a las <strong>${horarios[0].hora_inicio_turno}:00</strong> tienen el mayor índice de faltas. Considera tener 1 agente "volante" en ese horario.`);
             }
             
             if (recomendaciones.length === 0) {
