@@ -42,6 +42,8 @@
                 <button onclick="cambiarPestana('cobertura')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📈 Cobertura</button>
                 <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
                 <button onclick="cambiarPestana('insights')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">💡 Insights</button>
+                <!-- NUEVO BOTÓN REPORTES -->
+                <button onclick="cambiarPestana('reportes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📑 Reportes</button>
             </nav>
             <div class="p-4 border-t border-brand-mid">
                 <button onclick="cerrarSesionAdmin()" class="w-full text-xs font-bold text-red-300 hover:text-white bg-red-900/30 py-2 rounded">Cerrar Sesión</button>
@@ -123,7 +125,7 @@
                 </div>
             </div>
 
-            <!-- VISTA COBERTURA INTELIGENTE -->
+            <!-- VISTA COBERTURA -->
             <div id="vista-cobertura" class="p-6 max-w-7xl mx-auto w-full hidden">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 relative">
                     <div class="px-6 py-4 border-b bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -152,9 +154,9 @@
                     </div>
 
                     <div class="px-6 py-3 bg-gray-50 border-t flex flex-wrap gap-4 text-xs font-bold text-gray-500 justify-end rounded-b-xl">
-                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-200 border border-red-400 rounded-sm"></div> Déficit (Falta capacidad)</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-200 border border-red-400 rounded-sm"></div> Déficit</div>
                         <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-400 rounded-sm"></div> Cubierto</div>
-                        <div class="flex items-center gap-1 text-brand-dark border border-brand-teal px-2 py-1 rounded bg-brand-light">💡 Los decimales indican la ponderación (Senior = 1.2, Junior = 0.8)</div>
+                        <div class="flex items-center gap-1 text-brand-dark border border-brand-teal px-2 py-1 rounded bg-brand-light">💡 Ponderación (Senior = 1.2, Junior = 0.8)</div>
                     </div>
                 </div>
             </div>
@@ -179,51 +181,79 @@
 
             <!-- VISTA INSIGHTS -->
             <div id="vista-insights" class="p-6 max-w-7xl mx-auto w-full hidden">
-                <!-- Cambiamos a 4 columnas para acomodar la nueva tarjeta -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    
-                    <!-- Tendencias -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">📈 Tendencia Ausentismo</h3>
-                        <div id="insight-tendencia" class="flex flex-col gap-2">
-                            <!-- JS -->
-                        </div>
+                        <div id="insight-tendencia" class="flex flex-col gap-2"></div>
                     </div>
-
-                    <!-- Canales Críticos -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">🚨 Canal Crítico</h3>
-                        <div id="insight-canal" class="flex flex-col gap-2">
-                            <!-- JS -->
-                        </div>
+                        <div id="insight-canal" class="flex flex-col gap-2"></div>
                     </div>
-
-                    <!-- Horarios con Riesgo -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">⏰ Horarios de Riesgo</h3>
-                        <div id="insight-horarios" class="space-y-2">
-                            <!-- JS -->
-                        </div>
+                        <div id="insight-horarios" class="space-y-2"></div>
                     </div>
-
-                    <!-- NUEVA TARJETA: Impacto en Cobertura -->
                     <div class="bg-white rounded-xl shadow-sm border border-red-100 p-6 relative overflow-hidden">
                         <h3 class="text-sm font-bold text-red-400 uppercase tracking-wider mb-4">💸 Horas Perdidas</h3>
-                        <div id="insight-impacto" class="flex flex-col gap-3">
-                            <!-- JS -->
-                        </div>
+                        <div id="insight-impacto" class="flex flex-col gap-3"></div>
                     </div>
-
-                    <!-- Recomendaciones (Ocupa 4 columnas) -->
                     <div class="bg-brand-dark text-white rounded-xl shadow-sm p-6 md:col-span-2 lg:col-span-4 relative overflow-hidden">
                         <div class="relative z-10">
                             <h3 class="text-lg font-bold text-brand-teal mb-2">🧠 Recomendaciones Operativas Automáticas</h3>
-                            <p class="text-sm text-gray-300 mb-4">Basado en el cruce de datos de faltas, horarios y cobertura.</p>
-                            <ul id="insight-recomendaciones" class="space-y-3 text-sm">
-                                <!-- Se llena con JS -->
-                            </ul>
+                            <ul id="insight-recomendaciones" class="space-y-3 text-sm"></ul>
                         </div>
                         <div class="absolute right-0 bottom-0 opacity-10 text-9xl">💡</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 👇 NUEVA VISTA REPORTES 👇 -->
+            <div id="vista-reportes" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <!-- Filtro de Fechas -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-bold text-gray-600">Desde:</label>
+                        <input type="date" id="reporte-fecha-inicio" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-bold text-gray-600">Hasta:</label>
+                        <input type="date" id="reporte-fecha-fin" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+                    </div>
+                    <button onclick="cargarReportes()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-4 py-2 rounded shadow-sm transition">🔍 Buscar</button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Tabla Faltas -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[500px]">
+                        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-brand-dark">Faltas y Ausencias</h3>
+                            <button onclick="descargarCSV('tabla-rep-faltas', 'Reporte_Faltas')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
+                        </div>
+                        <div class="overflow-x-auto flex-1">
+                            <table id="tabla-rep-faltas" class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                    <tr><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Agente</th><th class="px-4 py-3">Canal</th><th class="px-4 py-3">Tipo</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tabla Excesos -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[500px]">
+                        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-brand-dark">Excesos en Auxiliares</h3>
+                            <button onclick="descargarCSV('tabla-rep-excesos', 'Reporte_Excesos')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
+                        </div>
+                        <div class="overflow-x-auto flex-1">
+                            <table id="tabla-rep-excesos" class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                    <tr><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Agente</th><th class="px-4 py-3">Motivo</th><th class="px-4 py-3">Exceso</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -329,12 +359,10 @@
         function hablar(texto) {
             if (!vozActivada) return;
             if (!('speechSynthesis' in window)) return alert("Tu navegador no soporta la síntesis de voz.");
-
             const mensaje = new SpeechSynthesisUtterance(texto);
             mensaje.lang = 'es-ES'; 
             mensaje.rate = 1.0;     
             mensaje.pitch = 1.0;    
-            
             window.speechSynthesis.speak(mensaje);
         }
 
@@ -381,7 +409,7 @@
         async function cerrarSesionAdmin() { await supabaseClient.auth.signOut(); location.reload(); }
 
         function cambiarPestana(pestana) {
-            ['dashboard', 'personal', 'horarios', 'cobertura', 'insights'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
+            ['dashboard', 'personal', 'horarios', 'cobertura', 'insights', 'reportes'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
             document.getElementById(`vista-${pestana}`).classList.remove('hidden');
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('bg-brand-mid', 'text-white');
@@ -390,13 +418,14 @@
             event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
             event.target.classList.add('bg-brand-mid', 'text-white');
             
-            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura', insights: 'Insights WFM' };
+            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura', insights: 'Insights WFM', reportes: 'Reportes Históricos' };
             document.getElementById('titulo-pestana').textContent = titulos[pestana];
             
             if (pestana === 'personal') cargarPersonal();
             if (pestana === 'horarios') cargarHorariosDelDia();
             if (pestana === 'cobertura') cargarCobertura();
             if (pestana === 'insights') cargarInsights(); 
+            if (pestana === 'reportes') inicializarReportes(); 
         }
 
         // --- LÓGICA DE HORARIOS ---
@@ -563,7 +592,7 @@
             cargarHorariosDelDia();
         }
 
-        // --- LÓGICA DE COBERTURA VS METAS CON PRODUCTIVIDAD ---
+        // --- LÓGICA DE COBERTURA ---
         let metasGlobales = {}; 
 
         async function cargarCobertura() {
@@ -642,7 +671,7 @@
             });
         }
 
-        // --- MODAL DE CONFIGURACIÓN DE METAS ---
+        // --- MODAL DE METAS ---
         async function abrirModalMetas() {
             const fecha = document.getElementById('fecha-cobertura').value;
             const modal = document.getElementById('modal-metas');
@@ -864,9 +893,8 @@
             document.body.removeChild(link);
         }
 
-        // --- LÓGICA INSIGHTS (INCLUYE HORAS PERDIDAS) ---
+        // --- LÓGICA INSIGHTS ---
         async function cargarInsights() {
-            // 1. Tendencias
             const { data: tendencia } = await supabaseClient.from('vista_tendencia_ausentismo').select('*').single();
             const divTendencia = document.getElementById('insight-tendencia');
             if (tendencia) {
@@ -878,95 +906,117 @@
                 let texto = diferencia === 0 ? 'Igual que el mes pasado' : (diferencia > 0 ? `+${diferencia} más que el mes pasado` : `${Math.abs(diferencia)} menos que el mes pasado`);
                 
                 divTendencia.innerHTML = `
-                    <div>
-                        <p class="text-4xl font-extrabold text-brand-dark">${actual}</p>
-                        <p class="text-xs text-gray-500 font-bold">Faltas este mes</p>
-                    </div>
-                    <div class="mt-2 ${color}">
-                        <p class="text-sm font-bold">${icono} ${anterior} (Mes anterior)</p>
-                        <p class="text-xs font-bold">${texto}</p>
-                    </div>
+                    <div><p class="text-4xl font-extrabold text-brand-dark">${actual}</p><p class="text-xs text-gray-500 font-bold">Faltas este mes</p></div>
+                    <div class="mt-2 ${color}"><p class="text-sm font-bold">${icono} ${anterior} (Mes anterior)</p><p class="text-xs font-bold">${texto}</p></div>
                 `;
             }
 
-            // 2. Canales Críticos
             const { data: canales } = await supabaseClient.from('vista_canales_criticos').select('*').limit(1);
             const divCanal = document.getElementById('insight-canal');
             if (canales && canales.length > 0) {
                 const canalTop = canales[0];
                 divCanal.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold">
-                            ${canalTop.canal_principal.substring(0,2).toUpperCase()}
-                        </div>
-                        <div>
-                            <p class="text-lg font-extrabold text-brand-dark uppercase">${canalTop.canal_principal}</p>
-                            <p class="text-xs text-gray-500">Lleva <strong class="text-red-500">${canalTop.total_faltas} ausencias</strong> este mes.</p>
-                        </div>
+                        <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold">${canalTop.canal_principal.substring(0,2).toUpperCase()}</div>
+                        <div><p class="text-lg font-extrabold text-brand-dark uppercase">${canalTop.canal_principal}</p><p class="text-xs text-gray-500">Lleva <strong class="text-red-500">${canalTop.total_faltas} ausencias</strong> este mes.</p></div>
                     </div>
                 `;
             } else {
                 divCanal.innerHTML = '<p class="text-green-500 font-bold text-sm">Todo bajo control. No hay ausencias.</p>';
             }
 
-            // 3. Horarios de Riesgo
             const { data: horarios } = await supabaseClient.from('vista_horarios_riesgo').select('*');
             const divHorarios = document.getElementById('insight-horarios');
             if (horarios && horarios.length > 0) {
                 divHorarios.innerHTML = '';
                 horarios.forEach(h => {
-                    divHorarios.innerHTML += `
-                        <div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100">
-                            <span class="font-bold text-gray-700 text-[11px]">Turnos que inician a las ${h.hora_inicio_turno}:00</span>
-                            <span class="bg-orange-200 text-orange-800 text-[10px] font-bold px-2 py-1 rounded">${h.total_faltas} faltas</span>
-                        </div>
-                    `;
+                    divHorarios.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100"><span class="font-bold text-gray-700 text-[11px]">Turnos que inician a las ${h.hora_inicio_turno}:00</span><span class="bg-orange-200 text-orange-800 text-[10px] font-bold px-2 py-1 rounded">${h.total_faltas} faltas</span></div>`;
                 });
             } else {
                 divHorarios.innerHTML = '<p class="text-gray-400 text-sm">No hay suficientes datos.</p>';
             }
 
-            // 4. Impacto en Cobertura (Horas Perdidas)
             const { data: impacto } = await supabaseClient.from('vista_impacto_cobertura').select('*').single();
             const divImpacto = document.getElementById('insight-impacto');
             if (impacto) {
                 divImpacto.innerHTML = `
-                    <div>
-                        <p class="text-4xl font-extrabold text-brand-dark">${impacto.horas_totales_perdidas} <span class="text-lg text-gray-500">hrs</span></p>
-                        <p class="text-xs text-gray-500 font-bold mb-2">Total de horas de trabajo perdidas.</p>
-                    </div>
+                    <div><p class="text-4xl font-extrabold text-brand-dark">${impacto.horas_totales_perdidas} <span class="text-lg text-gray-500">hrs</span></p><p class="text-xs text-gray-500 font-bold mb-2">Total de horas de trabajo perdidas.</p></div>
                     <div class="flex gap-2 text-xs font-bold mt-auto">
-                        <div class="bg-red-50 text-red-700 p-2 rounded flex-1 border border-red-100">
-                            <p class="text-[9px] uppercase opacity-70">Por Faltas</p>
-                            <p>${impacto.horas_faltas} hrs</p>
-                        </div>
-                        <div class="bg-orange-50 text-orange-700 p-2 rounded flex-1 border border-orange-100">
-                            <p class="text-[9px] uppercase opacity-70">Exceso Aux.</p>
-                            <p>${impacto.horas_auxiliares} hrs</p>
-                        </div>
+                        <div class="bg-red-50 text-red-700 p-2 rounded flex-1 border border-red-100"><p class="text-[9px] uppercase opacity-70">Por Faltas</p><p>${impacto.horas_faltas} hrs</p></div>
+                        <div class="bg-orange-50 text-orange-700 p-2 rounded flex-1 border border-orange-100"><p class="text-[9px] uppercase opacity-70">Exceso Aux.</p><p>${impacto.horas_auxiliares} hrs</p></div>
                     </div>
                 `;
             }
 
-            // 5. Recomendaciones Operativas
             const divRecomendaciones = document.getElementById('insight-recomendaciones');
             let recomendaciones = [];
-
-            if (tendencia && tendencia.actual > tendencia.anterior) {
-                recomendaciones.push(`⚠️ El ausentismo ha subido. Revisa si hay algún factor externo (clima, exámenes, etc.) afectando al equipo.`);
-            }
-            if (canales && canales.length > 0) {
-                recomendaciones.push(`🎯 El canal <strong>${canales[0].canal_principal.toUpperCase()}</strong> es el más afectado. Te sugerimos priorizar la asignación de agentes Senior a este canal mañana.`);
-            }
-            if (horarios && horarios.length > 0) {
-                recomendaciones.push(`⏰ Los turnos que inician a las <strong>${horarios[0].hora_inicio_turno}:00</strong> tienen el mayor índice de faltas. Considera tener 1 agente "volante" en ese horario.`);
-            }
-            
-            if (recomendaciones.length === 0) {
-                recomendaciones.push(`✅ La operación se mantiene estable. Mantén el monitoreo de las alertas de Telegram para reaccionar rápido.`);
-            }
-
+            if (tendencia && tendencia.actual > tendencia.anterior) recomendaciones.push(`⚠️ El ausentismo ha subido. Revisa si hay algún factor externo (clima, exámenes, etc.) afectando al equipo.`);
+            if (canales && canales.length > 0) recomendaciones.push(`🎯 El canal <strong>${canales[0].canal_principal.toUpperCase()}</strong> es el más afectado. Te sugerimos priorizar la asignación de agentes Senior a este canal mañana.`);
+            if (horarios && horarios.length > 0) recomendaciones.push(`⏰ Los turnos que inician a las <strong>${horarios[0].hora_inicio_turno}:00</strong> tienen el mayor índice de faltas. Considera tener 1 agente "volante" en ese horario.`);
+            if (recomendaciones.length === 0) recomendaciones.push(`✅ La operación se mantiene estable. Mantén el monitoreo de las alertas de Telegram para reaccionar rápido.`);
             divRecomendaciones.innerHTML = recomendaciones.map(r => `<li class="flex items-start gap-2"><span class="text-brand-teal mt-1">•</span> <span>${r}</span></li>`).join('');
+        }
+
+        // --- LÓGICA REPORTES HISTÓRICOS ---
+        function inicializarReportes() {
+            const hoy = new Date();
+            const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            
+            document.getElementById('reporte-fecha-inicio').value = primerDiaMes.toISOString().split('T')[0];
+            document.getElementById('reporte-fecha-fin').value = hoy.toISOString().split('T')[0];
+            
+            cargarReportes();
+        }
+
+        async function cargarReportes() {
+            const fechaInicio = document.getElementById('reporte-fecha-inicio').value;
+            const fechaFin = document.getElementById('reporte-fecha-fin').value;
+            
+            // Cargar Faltas
+            const { data: faltas } = await supabaseClient.from('vista_reporte_faltas')
+                .select('*')
+                .gte('fecha', fechaInicio)
+                .lte('fecha', fechaFin)
+                .order('fecha', { ascending: false });
+
+            const tbodyFaltas = document.querySelector('#tabla-rep-faltas tbody');
+            tbodyFaltas.innerHTML = faltas && faltas.length > 0 ? '' : '<tr><td colspan="4" class="text-center py-4 text-gray-400">No hay faltas en este periodo</td></tr>';
+            if (faltas) {
+                faltas.forEach(f => {
+                    let fFormat = new Date(f.fecha + 'T00:00:00').toLocaleDateString('es-ES');
+                    let color = f.tipo === 'falta' ? 'text-red-600' : 'text-gray-600';
+                    tbodyFaltas.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-2 font-medium">${fFormat}</td>
+                            <td class="px-4 py-2 font-bold text-brand-dark">${f.nombre}</td>
+                            <td class="px-4 py-2 text-xs uppercase">${f.canal_principal}</td>
+                            <td class="px-4 py-2 font-bold uppercase ${color}">${f.tipo}</td>
+                        </tr>`;
+                });
+            }
+
+            // Cargar Excesos
+            const { data: excesos } = await supabaseClient.from('vista_reporte_excesos')
+                .select('*')
+                .gte('inicio', fechaInicio + 'T00:00:00')
+                .lte('inicio', fechaFin + 'T23:59:59')
+                .order('inicio', { ascending: false });
+
+            const tbodyExcesos = document.querySelector('#tabla-rep-excesos tbody');
+            tbodyExcesos.innerHTML = excesos && excesos.length > 0 ? '' : '<tr><td colspan="4" class="text-center py-4 text-gray-400">No hay excesos en este periodo</td></tr>';
+            if (excesos) {
+                excesos.forEach(e => {
+                    let fechaHora = new Date(e.inicio).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+                    let icono = e.estado === 'baño' ? '🚽' : (e.estado === 'almuerzo' ? '🍽️' : '📚');
+                    tbodyExcesos.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-2 font-medium text-xs">${fechaHora}</td>
+                            <td class="px-4 py-2 font-bold text-brand-dark">${e.nombre}</td>
+                            <td class="px-4 py-2 capitalize text-xs">${icono} ${e.estado}</td>
+                            <td class="px-4 py-2 font-extrabold text-red-600">+${e.minutos_excedidos} min</td>
+                        </tr>`;
+                });
+            }
         }
 
         function iniciarDashboard() {
