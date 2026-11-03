@@ -32,7 +32,6 @@
             <button onclick="iniciarSesion()" id="btn-login" class="w-full bg-brand-dark hover:bg-brand-mid text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors shadow-sm">
                 Ingresar al Sistema
             </button>
-            <p class="text-xs text-center text-gray-500 mt-4">Usa tu correo corporativo. Si no tienes cuenta, contacta al supervisor.</p>
         </div>
     </div>
 
@@ -43,16 +42,32 @@
                 <p class="text-xs text-gray-500 font-bold uppercase">Bienvenido(a)</p>
                 <h1 class="text-lg font-extrabold text-brand-dark" id="nombre-agente">Cargando...</h1>
             </div>
-            <button onclick="cerrarSesion()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1.5 rounded hover:bg-red-100 transition">Salir</button>
+            <div class="flex items-center gap-2">
+                <!-- BOTÓN DE VOZ -->
+                <button id="btn-voz-agente" onclick="toggleVozAgente()" class="text-xs text-brand-dark font-bold bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 transition">🔊</button>
+                <button onclick="cerrarSesion()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1.5 rounded hover:bg-red-100 transition">Salir</button>
+            </div>
         </div>
 
         <!-- RECUADRO: HORARIO DEL DÍA -->
-        <div class="mb-5 p-4 bg-brand-light rounded-lg border border-brand-teal/30 flex items-center justify-between shadow-sm">
+        <div class="mb-4 p-4 bg-brand-light rounded-lg border border-brand-teal/30 flex items-center justify-between shadow-sm">
             <div>
                 <p class="text-xs font-bold text-brand-teal uppercase tracking-wider mb-1">Mi turno de hoy</p>
                 <p class="text-sm font-bold text-brand-dark" id="horario-info">Cargando horario...</p>
             </div>
             <div class="text-2xl">📅</div>
+        </div>
+
+        <!-- RECUADRO: CONTROL DE TURNO -->
+        <div class="mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm text-center">
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Control de Jornada</p>
+            <button id="btn-iniciar-turno" onclick="iniciarTurno()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm">
+                ⏰ Iniciar Turno
+            </button>
+            <button id="btn-finalizar-turno" onclick="finalizarTurno()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm hidden">
+                🚪 Finalizar Turno
+            </button>
+            <p id="estado-jornada" class="text-xs font-bold text-gray-500 mt-2"></p>
         </div>
 
         <div class="mb-5">
@@ -82,19 +97,26 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let agenteActualId = null;
+        let nombreAgenteActual = "";
+        const fechaHoy = new Date().toISOString().split('T')[0];
 
-        // 1. Revisar si ya hay una sesión activa al cargar la página
+        // --- VARIABLES PARA EL CONTROL DE VOZ Y TIEMPO ---
+        let vozActivadaAgente = true;
+        let intervaloTiempoAuxiliar = null;
+        let horaInicioAuxiliar = null;
+        let limiteAuxiliarMinutos = 0;
+        let tipoAuxiliarActual = "";
+        let ultimoMinutoAvisado = -1;
+
         supabaseClient.auth.getSession().then(({ data: { session } }) => {
             if (session) mostrarApp(session.user);
         });
 
-        // 2. Escuchar cambios de sesión (Login / Logout)
         supabaseClient.auth.onAuthStateChange((_event, session) => {
             if (session) mostrarApp(session.user);
             else ocultarApp();
         });
 
-        // 3. Función para Iniciar Sesión
         async function iniciarSesion() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -113,25 +135,20 @@
             if (error) alert("Error al ingresar: " + error.message);
         }
 
-        // 4. Función para Cerrar Sesión
-        async function cerrarSesion() {
-            await supabaseClient.auth.signOut();
-        }
+        async function cerrarSesion() { await supabaseClient.auth.signOut(); }
 
-        // 5. Mostrar la App una vez logueado
         async function mostrarApp(user) {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
 
-            // Buscar el ID del agente usando su correo vinculado
             const { data } = await supabaseClient.from('agentes').select('id, nombre').eq('user_id', user.id).single();
             
             if (data) {
                 agenteActualId = data.id;
+                nombreAgenteActual = data.nombre;
                 document.getElementById('nombre-agente').textContent = data.nombre;
 
-                // LÓGICA: CARGAR HORARIO DEL DÍA
-                const fechaHoy = new Date().toISOString().split('T')[0];
+                // Cargar Horario
                 const { data: horario } = await supabaseClient.from('plan_diario')
                     .select('hora_inicio, hora_fin, canal')
                     .eq('agente_id', agenteActualId)
@@ -140,12 +157,15 @@
 
                 const infoHorario = document.getElementById('horario-info');
                 if (horario) {
-                    // AQUÍ ESTÁ EL CAMBIO: substring(0,5) para quitar los segundos
                     infoHorario.innerHTML = `<span class="text-brand-teal font-extrabold text-base">${horario.hora_inicio.substring(0,5)} - ${horario.hora_fin.substring(0,5)}</span> | Canal: <span class="uppercase font-bold">${horario.canal}</span>`;
                 } else {
                     infoHorario.textContent = "Día libre / No asignado";
                     infoHorario.classList.add('text-gray-400');
                 }
+
+                // Cargar Estado de Jornada y Pausas Activas
+                verificarEstadoJornada();
+                verificarPausaActivaAlRecargar();
 
             } else {
                 document.getElementById('nombre-agente').textContent = "Supervisor / Admin";
@@ -158,6 +178,7 @@
             document.getElementById('app-screen').classList.add('hidden');
             document.getElementById('email').value = '';
             document.getElementById('password').value = '';
+            if (intervaloTiempoAuxiliar) clearInterval(intervaloTiempoAuxiliar);
         }
 
         function mostrarMensaje(texto, color = "green") {
@@ -168,16 +189,148 @@
             setTimeout(() => msgDiv.classList.add('hidden'), 3500);
         }
 
-        // 6. Registrar Pausas
+        // --- LÓGICA DE VOZ DEL ASESOR ---
+        function toggleVozAgente() {
+            vozActivadaAgente = !vozActivadaAgente;
+            const btn = document.getElementById('btn-voz-agente');
+            if (vozActivadaAgente) {
+                btn.innerHTML = "🔊";
+                btn.classList.remove('bg-red-100', 'text-red-600');
+                btn.classList.add('bg-gray-100', 'text-brand-dark');
+            } else {
+                btn.innerHTML = "🔇";
+                btn.classList.add('bg-red-100', 'text-red-600');
+                btn.classList.remove('bg-gray-100', 'text-brand-dark');
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function alertarVozExceso(minutosTotales, minutosExceso) {
+            if (!vozActivadaAgente) return;
+            if (!('speechSynthesis' in window)) return;
+
+            const msg = new SpeechSynthesisUtterance(`Atención ${nombreAgenteActual}. Recuerda que el auxiliar de ${tipoAuxiliarActual} tiene un límite de ${limiteAuxiliarMinutos} minutos. Llevas ${minutosExceso} minutos en exceso. Por favor, marca Volver a laborar.`);
+            msg.lang = 'es-ES';
+            msg.rate = 1.0;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function iniciarContadorAuxiliar(tipo, horaInicioStr) {
+            if (intervaloTiempoAuxiliar) clearInterval(intervaloTiempoAuxiliar);
+            
+            tipoAuxiliarActual = tipo;
+            horaInicioAuxiliar = new Date(horaInicioStr);
+            ultimoMinutoAvisado = -1;
+
+            // Definimos los límites (puedes cambiarlos aquí)
+            if (tipo === 'baño') limiteAuxiliarMinutos = 15;
+            else if (tipo === 'almuerzo') limiteAuxiliarMinutos = 60;
+            else if (tipo === 'capacitacion') limiteAuxiliarMinutos = 60;
+
+            // Empezar a revisar cada 10 segundos
+            intervaloTiempoAuxiliar = setInterval(() => {
+                const ahora = new Date();
+                const minutosTranscurridos = Math.floor((ahora - horaInicioAuxiliar) / 60000);
+                
+                if (minutosTranscurridos > limiteAuxiliarMinutos) {
+                    const exceso = minutosTranscurridos - limiteAuxiliarMinutos;
+                    // Solo avisa una vez por cada minuto nuevo
+                    if (ultimoMinutoAvisado !== minutosTranscurridos) {
+                        alertarVozExceso(minutosTranscurridos, exceso);
+                        ultimoMinutoAvisado = minutosTranscurridos;
+                    }
+                }
+            }, 10000); // Revisa cada 10 segundos
+        }
+
+        async function verificarPausaActivaAlRecargar() {
+            if (!agenteActualId) return;
+            const { data: activos } = await supabaseClient.from('status_events')
+                .select('*')
+                .eq('agente_id', agenteActualId)
+                .is('fin', null)
+                .maybeSingle();
+
+            if (activos) {
+                // El asesor recargó la página pero sigue en pausa, retomamos el contador
+                iniciarContadorAuxiliar(activos.estado, activos.inicio);
+            }
+        }
+
+        // --- LÓGICA DE JORNADA ---
+        async function verificarEstadoJornada() {
+            if (!agenteActualId) return;
+
+            const { data } = await supabaseClient.from('registro_jornada')
+                .select('*')
+                .eq('agente_id', agenteActualId)
+                .eq('fecha', fechaHoy)
+                .single();
+
+            const btnIniciar = document.getElementById('btn-iniciar-turno');
+            const btnFinalizar = document.getElementById('btn-finalizar-turno');
+            const txtEstado = document.getElementById('estado-jornada');
+
+            if (!data) {
+                btnIniciar.classList.remove('hidden');
+                btnFinalizar.classList.add('hidden');
+                txtEstado.textContent = "No has iniciado tu turno aún.";
+            } else if (data && !data.hora_fin_real) {
+                btnIniciar.classList.add('hidden');
+                btnFinalizar.classList.remove('hidden');
+                let horaInicio = new Date(data.hora_inicio_real).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                txtEstado.innerHTML = `<span class="text-green-600">Turno iniciado a las ${horaInicio}</span>`;
+            } else if (data && data.hora_fin_real) {
+                btnIniciar.classList.add('hidden');
+                btnFinalizar.classList.add('hidden');
+                txtEstado.innerHTML = `<span class="text-gray-400">Turno finalizado por hoy ✔️</span>`;
+            }
+        }
+
+        async function iniciarTurno() {
+            if (!agenteActualId) return;
+            
+            const { error } = await supabaseClient.from('registro_jornada').insert([{
+                agente_id: agenteActualId,
+                fecha: fechaHoy,
+                hora_inicio_real: new Date().toISOString()
+            }]);
+
+            if (error) return alert("Error al iniciar turno: " + error.message);
+            
+            mostrarMensaje("Turno iniciado correctamente", "green");
+            verificarEstadoJornada();
+        }
+
+        async function finalizarTurno() {
+            if (!agenteActualId) return;
+            
+            const { error } = await supabaseClient.from('registro_jornada').update({
+                hora_fin_real: new Date().toISOString()
+            }).eq('agente_id', agenteActualId).eq('fecha', fechaHoy);
+
+            if (error) return alert("Error al finalizar turno: " + error.message);
+            
+            mostrarMensaje("Turno finalizado correctamente", "red");
+            verificarEstadoJornada();
+        }
+
+        // --- LÓGICA DE PAUSAS Y AUSENCIAS ---
         async function registrarAuxiliar(estado) {
             if (!agenteActualId) return alert("No se encontró tu perfil de agente.");
 
             const { data: activos } = await supabaseClient.from('status_events').select('id').eq('agente_id', agenteActualId).is('fin', null);
             if (activos && activos.length > 0) return alert("Ya tienes una pausa activa. Debes marcar 'Volver' primero.");
 
-            const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteActualId, estado: estado }]);
+            const horaSalida = new Date().toISOString();
+
+            const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteActualId, estado: estado, inicio: horaSalida }]);
             if (error) return alert("Error: " + error.message);
+            
             mostrarMensaje(`Salida a ${estado.toUpperCase()} registrada`, "teal");
+            
+            // Iniciar temporizador y voz
+            iniciarContadorAuxiliar(estado, horaSalida);
         }
 
         async function volverDeAuxiliar() {
@@ -192,14 +345,19 @@
 
             if (error) return alert("Error: " + error.message);
             if (activos.length === 0) return alert("No tienes ninguna pausa activa pendiente.");
+            
             mostrarMensaje("Regreso a laborar registrado", "blue");
+
+            // Detener temporizador y voz
+            if (intervaloTiempoAuxiliar) clearInterval(intervaloTiempoAuxiliar);
+            window.speechSynthesis.cancel(); // Detener cualquier voz en curso
+            horaInicioAuxiliar = null;
+            ultimoMinutoAvisado = -1;
         }
 
-        // 7. Registrar Ausencias
         async function registrarAusencia(tipo) {
             if (!agenteActualId) return;
 
-            const fechaHoy = new Date().toISOString().split('T')[0];
             const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteActualId, fecha: fechaHoy, tipo: tipo, motivo: 'Web App' }]);
             
             if (error) return alert("Error: " + error.message);
