@@ -65,21 +65,217 @@
                 </div>
             </header>
 
-            <!-- (El resto de las vistas se mantienen exactamente igual) -->
             <!-- VISTA DASHBOARD -->
-            <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">... (código intacto) ...</div>
-            <!-- VISTA HORARIOS -->
-            <div id="vista-horarios" class="p-6 max-w-7xl mx-auto w-full hidden">... (código intacto) ...</div>
-            <!-- VISTA COBERTURA -->
-            <div id="vista-cobertura" class="p-6 max-w-7xl mx-auto w-full hidden">... (código intacto) ...</div>
-            <!-- VISTA PERSONAL -->
-            <div id="vista-personal" class="p-6 max-w-7xl mx-auto w-full hidden">... (código intacto) ...</div>
-            <!-- VISTA INSIGHTS -->
-            <div id="vista-insights" class="p-6 max-w-7xl mx-auto w-full hidden">... (código intacto) ...</div>
-            <!-- VISTA REPORTES -->
-            <div id="vista-reportes" class="p-6 max-w-7xl mx-auto w-full hidden">... (código intacto) ...</div>
+            <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Total Agentes</p><p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Ausencias Hoy</p><p class="text-4xl font-extrabold text-red-500" id="kpi-ausencias">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                        <div class="px-6 py-4 border-b bg-orange-50/50"><h3 class="text-lg font-bold text-orange-600">⏱️ Auxiliares Activos</h3></div>
+                        <div class="p-4 space-y-3 overflow-y-auto flex-1" id="lista-auxiliares"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="px-6 py-4 border-b bg-gray-50/50"><h3 class="text-lg font-bold text-brand-dark">Últimos Registros</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Evento</th><th class="px-6 py-3">Hora</th></tr></thead>
+                                <tbody id="tabla-registros"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <!-- 👇 NUEVA VISTA SIMULADOR 👇 -->
+            <!-- VISTA HORARIOS -->
+            <div id="vista-horarios" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-brand-dark">Asignar Turno (Individual)</h3></div>
+                        <div class="space-y-4">
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Agente</label><select id="horario-agente" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></select></div>
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Fecha</label><input type="date" id="horario-fecha" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Hora Inicio</label><input type="time" id="horario-inicio" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></div>
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Hora Fin</label><input type="time" id="horario-fin" class="w-full border rounded-lg p-2 text-sm bg-gray-50"></div>
+                            </div>
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Canal Asignado</label><select id="horario-canal" class="w-full border rounded-lg p-2 text-sm bg-gray-50"><option value="ccvox">CCVOX (Voz)</option><option value="pchat">PCHAT (Telegram)</option><option value="correo">Correo (Trámites)</option><option value="multicanal">Multicanal</option></select></div>
+                            <button onclick="guardarHorario()" class="w-full bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 rounded-lg text-sm transition-colors mt-2">Guardar Turno</button>
+                            <div id="mensaje-horario" class="text-xs text-center font-bold text-green-600 hidden"></div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center flex-wrap gap-2">
+                            <h3 class="text-lg font-bold text-brand-dark">Turnos Asignados</h3>
+                            <div class="flex items-center gap-2">
+                                <button onclick="abrirModalMasivo()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">⚡ Asignación Masiva</button>
+                                <button onclick="descargarCSV('tabla-horarios', 'Horarios')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
+                                <input type="date" id="filtro-fecha" class="border rounded-lg px-3 py-1.5 text-sm bg-white" onchange="cargarHorariosDelDia()">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table id="tabla-horarios" class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Horario</th><th class="px-6 py-3">Canal</th><th class="px-6 py-3">Acción</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA COBERTURA -->
+            <div id="vista-cobertura" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 relative">
+                    <div class="px-6 py-4 border-b bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark">Cobertura vs Requerimiento</h3>
+                            <p class="text-xs text-gray-500">Calculado usando la Capacidad Efectiva (Ponderación por Experiencia).</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <label class="text-sm font-bold text-gray-600">Fecha:</label>
+                            <input type="date" id="fecha-cobertura" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarCobertura()">
+                            <button onclick="abrirModalMetas()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm">⚙️ Configurar Metas</button>
+                            <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600 shadow-sm">Actualizar</button>
+                            <button onclick="descargarCSV('tabla-cobertura', 'Cobertura')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto p-4">
+                        <table class="w-full text-sm text-center text-gray-600 border-collapse">
+                            <thead>
+                                <tr class="bg-brand-dark text-white" id="thead-cobertura">
+                                    <th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-cobertura"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="px-6 py-3 bg-gray-50 border-t flex flex-wrap gap-4 text-xs font-bold text-gray-500 justify-end rounded-b-xl">
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-200 border border-red-400 rounded-sm"></div> Déficit</div>
+                        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-400 rounded-sm"></div> Cubierto</div>
+                        <div class="flex items-center gap-1 text-brand-dark border border-brand-teal px-2 py-1 rounded bg-brand-light">💡 Ponderación (Senior = 1.2, Junior = 0.8)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA PERSONAL -->
+            <div id="vista-personal" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-brand-dark">Directorio de Agentes</h3>
+                        <input type="text" id="filtro-agentes" placeholder="Buscar..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-brand-teal w-64">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                <tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Canal Base</th><th class="px-6 py-3">Nivel</th><th class="px-6 py-3">Factor</th><th class="px-6 py-3 text-center">Editar</th></tr>
+                            </thead>
+                            <tbody id="tabla-personal"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA INSIGHTS -->
+            <div id="vista-insights" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">📈 Tendencia Ausentismo</h3>
+                        <div id="insight-tendencia" class="flex flex-col gap-2"></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">🚨 Canal Crítico</h3>
+                        <div id="insight-canal" class="flex flex-col gap-2"></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">⏰ Horarios de Riesgo</h3>
+                        <div id="insight-horarios" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-red-100 p-6 relative overflow-hidden">
+                        <h3 class="text-sm font-bold text-red-400 uppercase tracking-wider mb-4">💸 Horas Perdidas</h3>
+                        <div id="insight-impacto" class="flex flex-col gap-3"></div>
+                    </div>
+                    <div class="bg-brand-dark text-white rounded-xl shadow-sm p-6 md:col-span-2 lg:col-span-4 relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h3 class="text-lg font-bold text-brand-teal mb-2">🧠 Recomendaciones Operativas Automáticas</h3>
+                            <ul id="insight-recomendaciones" class="space-y-3 text-sm"></ul>
+                        </div>
+                        <div class="absolute right-0 bottom-0 opacity-10 text-9xl">💡</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA REPORTES -->
+            <div id="vista-reportes" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-bold text-gray-600">Desde:</label>
+                        <input type="date" id="reporte-fecha-inicio" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-bold text-gray-600">Hasta:</label>
+                        <input type="date" id="reporte-fecha-fin" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+                    </div>
+                    <button onclick="cargarReportes()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-4 py-2 rounded shadow-sm transition">🔍 Buscar</button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-brand-dark">Faltas y Ausencias</h3>
+                            <button onclick="descargarCSV('tabla-rep-faltas', 'Reporte_Faltas')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
+                        </div>
+                        <div class="overflow-x-auto flex-1">
+                            <table id="tabla-rep-faltas" class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                    <tr><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Agente</th><th class="px-4 py-3">Canal</th><th class="px-4 py-3">Tipo</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-brand-dark">Excesos en Auxiliares</h3>
+                            <button onclick="descargarCSV('tabla-rep-excesos', 'Reporte_Excesos')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
+                        </div>
+                        <div class="overflow-x-auto flex-1">
+                            <table id="tabla-rep-excesos" class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                    <tr><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Agente</th><th class="px-4 py-3">Motivo</th><th class="px-4 py-3">Exceso</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLA DE ADHERENCIA -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                    <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark">Adherencia: Planificado vs. Ejecución Real</h3>
+                            <p class="text-xs text-gray-500">Calculado como (Horas Planificadas - Faltas - Excesos) / Horas Planificadas.</p>
+                        </div>
+                        <button onclick="descargarCSV('tabla-rep-adherencia', 'Reporte_Adherencia')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table id="tabla-rep-adherencia" class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Agente</th><th class="px-4 py-3">Hrs Plan.</th><th class="px-4 py-3">Hrs Faltas</th><th class="px-4 py-3">Hrs Excesos</th><th class="px-4 py-3">Hrs Cumplidas</th><th class="px-4 py-3 text-right">% Adherencia</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 👇 VISTA SIMULADOR 👇 -->
             <div id="vista-simulador" class="p-6 max-w-7xl mx-auto w-full hidden">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 p-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b pb-4">
@@ -95,7 +291,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Controles de Simulación -->
                         <div class="space-y-4">
                             <div class="bg-red-50 border border-red-100 p-4 rounded-lg">
                                 <h4 class="font-bold text-red-700 mb-2">1. Simular Ausencia (Restar Personal)</h4>
@@ -140,7 +335,6 @@
                             </div>
                         </div>
 
-                        <!-- Resultados de la Simulación -->
                         <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg flex flex-col">
                             <h4 class="font-bold text-brand-dark mb-2">Impacto en la Cobertura</h4>
                             <div id="resultado-simulacion" class="flex-1 overflow-y-auto max-h-[300px]">
@@ -150,7 +344,6 @@
                     </div>
                 </div>
 
-                <!-- Tabla Comparativa -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b bg-gray-50/50">
                         <h3 class="text-lg font-bold text-brand-dark">Comparativa: Realidad vs. Simulación</h3>
@@ -168,26 +361,784 @@
                 </div>
             </div>
             <!-- 👆 FIN VISTA SIMULADOR 👆 -->
-
         </main>
     </div>
 
-    <!-- (Modales intactos) -->
     <!-- MODAL PARA CONFIGURAR METAS -->
-    <div id="modal-metas" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">... (código intacto) ...</div>
+    <div id="modal-metas" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="text-lg font-bold text-brand-dark">Definir Agentes Requeridos (Por Hora)</h3>
+                <button onclick="cerrarModalMetas()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-4 overflow-auto flex-1" id="contenedor-inputs-metas"></div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                <button onclick="cerrarModalMetas()" class="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-200 rounded">Cancelar</button>
+                <button onclick="guardarMetas()" class="px-6 py-2 bg-brand-teal text-white font-bold text-sm rounded shadow hover:bg-teal-600 transition">Guardar Metas</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL PARA EDITAR AGENTE -->
-    <div id="modal-editar-agente" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">... (código intacto) ...</div>
+    <div id="modal-editar-agente" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="text-lg font-bold text-brand-dark">Editar Perfil del Agente</h3>
+                <button onclick="cerrarModalEditarAgente()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div><label class="block text-xs font-bold text-gray-500 mb-1">Nombre</label><input type="text" id="edit-nombre" class="w-full border rounded-lg p-2 text-sm bg-gray-200 text-gray-600" disabled></div>
+                <div><label class="block text-xs font-bold text-gray-500 mb-1">Canal Principal</label><select id="edit-canal" class="w-full border rounded-lg p-2 text-sm bg-white"><option value="ccvox">CCVOX (Voz)</option><option value="pchat">PCHAT (Telegram)</option><option value="correo">Correo (Trámites)</option><option value="multicanal">Multicanal</option></select></div>
+                <div><label class="block text-xs font-bold text-gray-500 mb-1">Nivel de Experiencia</label><select id="edit-nivel" class="w-full border rounded-lg p-2 text-sm bg-white" onchange="actualizarFactorAuto()"><option value="senior">Senior</option><option value="semi">Semi</option><option value="junior">Junior</option></select></div>
+                <div><label class="block text-xs font-bold text-gray-500 mb-1">Factor de Productividad</label><input type="number" id="edit-factor" step="0.1" min="0.1" max="2.0" class="w-full border rounded-lg p-2 text-sm bg-white"><p class="text-[10px] text-gray-400 mt-1">Se actualiza automáticamente según el nivel, pero puedes ajustarlo manualmente.</p></div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                <button onclick="cerrarModalEditarAgente()" class="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-200 rounded">Cancelar</button>
+                <button onclick="guardarEdicionAgente()" class="px-6 py-2 bg-brand-teal text-white font-bold text-sm rounded shadow hover:bg-teal-600 transition">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL PARA ASIGNACIÓN MASIVA -->
-    <div id="modal-masivo" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">... (código intacto) ...</div>
+    <div id="modal-masivo" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-brand-dark text-white rounded-t-xl">
+                <h3 class="text-lg font-bold">⚡ Asignación Masiva de Turnos</h3>
+                <button onclick="cerrarModalMasivo()" class="text-gray-300 hover:text-white font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">1. Seleccionar Agentes</label>
+                        <button onclick="seleccionarTodosAgentes()" class="text-xs text-brand-teal font-bold hover:underline">Seleccionar Todos / Quitar Todos</button>
+                    </div>
+                    <div id="lista-checkbox-agentes" class="h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50 grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">2. Rango de Fechas</label>
+                        <div class="flex gap-2">
+                            <input type="date" id="masivo-fecha-inicio" class="w-full border rounded-lg p-2 text-sm bg-white">
+                            <input type="date" id="masivo-fecha-fin" class="w-full border rounded-lg p-2 text-sm bg-white">
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-5">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="masivo-omitir-fines" class="w-4 h-4 text-brand-teal rounded focus:ring-brand-teal" checked>
+                            <span class="text-sm font-bold text-gray-700">Omitir Sábados y Domingos</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Inicio</label><input type="time" id="masivo-hora-inicio" class="w-full border rounded-lg p-2 text-sm bg-white"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Fin</label><input type="time" id="masivo-hora-fin" class="w-full border rounded-lg p-2 text-sm bg-white"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Canal</label><select id="masivo-canal" class="w-full border rounded-lg p-2 text-sm bg-white"><option value="ccvox">CCVOX (Voz)</option><option value="pchat">PCHAT (Telegram)</option><option value="correo">Correo (Trámites)</option><option value="multicanal">Multicanal</option></select></div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end gap-3">
+                <button onclick="cerrarModalMasivo()" class="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-200 rounded">Cancelar</button>
+                <button onclick="guardarAsignacionMasiva()" id="btn-guardar-masivo" class="px-6 py-2 bg-brand-teal text-white font-bold text-sm rounded shadow hover:bg-teal-600 transition">Generar Turnos</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // (Toda la lógica de voz, conexión, login, etc., se mantiene intacta)
+        // --- LÓGICA DE VOZ ---
+        let vozActivada = true;
+        const agentesNotificadosPorVoz = new Set(); 
 
-        // --- NUEVA LÓGICA DE SIMULACIÓN ---
+        function toggleVoz() {
+            vozActivada = !vozActivada;
+            const btn = document.getElementById('btn-voz');
+            if (vozActivada) {
+                btn.innerHTML = "🔊 Voz: ON";
+                btn.classList.remove('text-red-600', 'bg-red-50', 'border-red-300');
+            } else {
+                btn.innerHTML = "🔇 Voz: OFF";
+                btn.classList.add('text-red-600', 'bg-red-50', 'border-red-300');
+                window.speechSynthesis.cancel(); 
+            }
+        }
+
+        function hablar(texto) {
+            if (!vozActivada) return;
+            if (!('speechSynthesis' in window)) return alert("Tu navegador no soporta la síntesis de voz.");
+            const mensaje = new SpeechSynthesisUtterance(texto);
+            mensaje.lang = 'es-ES'; 
+            mensaje.rate = 1.0;     
+            mensaje.pitch = 1.0;    
+            window.speechSynthesis.speak(mensaje);
+        }
+
+        // --- CONEXIÓN SUPABASE ---
+        const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
+        const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let isAdmin = false;
+        let listaAgentesGlobal = [];
+        let personalGlobal = [];
+        let agenteEditandoId = null;
+        
+        const canales = ['ccvox', 'pchat', 'correo', 'multicanal'];
+        const horasMostrar = Array.from({length: 16}, (_, i) => i + 7); 
+
+        supabaseClient.auth.getSession().then(({ data: { session } }) => { if (session) verificarAdmin(session.user); });
+
+        async function loginAdmin() {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            const err = document.getElementById('login-error');
+            err.classList.add('hidden');
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+            if (error) { err.textContent = "Credenciales incorrectas"; err.classList.remove('hidden'); return; }
+            verificarAdmin(data.user);
+        }
+
+        async function verificarAdmin(user) {
+            const { data, error } = await supabaseClient.from('agentes').select('is_admin').eq('email', user.email.toLowerCase());
+            if (error) { alert("Error al verificar permisos: " + error.message); return; }
+            if (data && data.length > 0 && data[0].is_admin === true) {
+                isAdmin = true;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                iniciarDashboard();
+                cargarSelectores();
+            } else {
+                alert(`Acceso denegado.\nEl usuario ${user.email} no tiene permisos de supervisor.`);
+                supabaseClient.auth.signOut();
+            }
+        }
+
+        async function cerrarSesionAdmin() { await supabaseClient.auth.signOut(); location.reload(); }
+
+        function cambiarPestana(pestana) {
+            ['dashboard', 'personal', 'horarios', 'cobertura', 'insights', 'reportes', 'simulador'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
+            document.getElementById(`vista-${pestana}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-mid', 'text-white');
+                btn.classList.add('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
+            });
+            event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
+            event.target.classList.add('bg-brand-mid', 'text-white');
+            
+            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura', insights: 'Insights WFM', reportes: 'Reportes Históricos', simulador: 'Simulador WFM' };
+            document.getElementById('titulo-pestana').textContent = titulos[pestana];
+            
+            if (pestana === 'personal') cargarPersonal();
+            if (pestana === 'horarios') cargarHorariosDelDia();
+            if (pestana === 'cobertura') cargarCobertura();
+            if (pestana === 'insights') cargarInsights(); 
+            if (pestana === 'reportes') inicializarReportes(); 
+            if (pestana === 'simulador') inicializarSimulador();
+        }
+
+        // --- LÓGICA DE HORARIOS ---
+        async function cargarSelectores() {
+            const { data } = await supabaseClient.from('agentes').select('id, nombre').order('nombre');
+            listaAgentesGlobal = data || [];
+            const select = document.getElementById('horario-agente');
+            select.innerHTML = '<option value="">Seleccione...</option>';
+            listaAgentesGlobal.forEach(a => { select.innerHTML += `<option value="${a.id}">${a.nombre}</option>`; });
+
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('horario-fecha').value = hoy;
+            document.getElementById('filtro-fecha').value = hoy;
+            document.getElementById('fecha-cobertura').value = hoy;
+            document.getElementById('sim-fecha').value = hoy;
+        }
+
+        async function guardarHorario() {
+            const agente_id = document.getElementById('horario-agente').value;
+            const fecha = document.getElementById('horario-fecha').value;
+            const hora_inicio = document.getElementById('horario-inicio').value;
+            const hora_fin = document.getElementById('horario-fin').value;
+            const canal = document.getElementById('horario-canal').value;
+            const msg = document.getElementById('mensaje-horario');
+
+            if(!agente_id || !fecha || !hora_inicio || !hora_fin) return alert("Llena todos los campos por favor.");
+
+            const { error } = await supabaseClient.from('plan_diario').insert([{ agente_id, fecha, hora_inicio, hora_fin, canal, tipo: 'turno' }]);
+
+            if (error) return alert("Error: " + error.message);
+
+            msg.textContent = "Turno guardado correctamente ✅";
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+            
+            document.getElementById('horario-inicio').value = '';
+            document.getElementById('horario-fin').value = '';
+            cargarHorariosDelDia();
+        }
+
+        async function cargarHorariosDelDia() {
+            const fechaFiltro = document.getElementById('filtro-fecha').value;
+            const tabla = document.getElementById('tabla-horarios');
+            
+            const { data } = await supabaseClient.from('plan_diario')
+                .select('id, hora_inicio, hora_fin, canal, agentes(nombre, factor_productividad)')
+                .eq('fecha', fechaFiltro)
+                .order('hora_inicio');
+            
+            const tbody = tabla.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (data && data.length > 0) {
+                data.forEach(h => {
+                    let colorCanal = h.canal === 'ccvox' ? 'bg-blue-100 text-blue-800' : (h.canal === 'pchat' ? 'bg-teal-100 text-teal-800' : 'bg-purple-100 text-purple-800');
+                    let factor = h.agentes?.factor_productividad || 1.0;
+                    tbody.innerHTML += `
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 font-bold text-brand-dark">${h.agentes?.nombre} <span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-1">F: ${factor}</span></td>
+                            <td class="px-6 py-4 font-mono font-medium">${h.hora_inicio.substring(0,5)} - ${h.hora_fin.substring(0,5)}</td>
+                            <td class="px-6 py-4"><span class="${colorCanal} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${h.canal}</span></td>
+                            <td class="px-6 py-4"><button onclick="eliminarHorario('${h.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">Eliminar</button></td>
+                        </tr>`;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">No hay turnos asignados para esta fecha</td></tr>';
+            }
+        }
+
+        async function eliminarHorario(id) {
+            if(!confirm("¿Seguro que deseas eliminar este turno?")) return;
+            await supabaseClient.from('plan_diario').delete().eq('id', id);
+            cargarHorariosDelDia();
+        }
+
+        // --- LÓGICA DE ASIGNACIÓN MASIVA ---
+        function abrirModalMasivo() {
+            const modal = document.getElementById('modal-masivo');
+            const contenedor = document.getElementById('lista-checkbox-agentes');
+            
+            contenedor.innerHTML = '';
+            listaAgentesGlobal.forEach(a => {
+                contenedor.innerHTML += `
+                    <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-100 p-1 rounded">
+                        <input type="checkbox" value="${a.id}" class="checkbox-agente w-4 h-4 text-brand-teal rounded focus:ring-brand-teal">
+                        <span class="truncate">${a.nombre}</span>
+                    </label>
+                `;
+            });
+
+            const hoy = new Date();
+            const en5Dias = new Date();
+            en5Dias.setDate(hoy.getDate() + 5);
+            
+            document.getElementById('masivo-fecha-inicio').value = hoy.toISOString().split('T')[0];
+            document.getElementById('masivo-fecha-fin').value = en5Dias.toISOString().split('T')[0];
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function cerrarModalMasivo() {
+            document.getElementById('modal-masivo').classList.add('hidden');
+            document.getElementById('modal-masivo').classList.remove('flex');
+        }
+
+        function seleccionarTodosAgentes() {
+            const checkboxes = document.querySelectorAll('.checkbox-agente');
+            const todosSeleccionados = Array.from(checkboxes).every(c => c.checked);
+            checkboxes.forEach(c => c.checked = !todosSeleccionados);
+        }
+
+        async function guardarAsignacionMasiva() {
+            const btn = document.getElementById('btn-guardar-masivo');
+            const checkboxes = document.querySelectorAll('.checkbox-agente:checked');
+            
+            if (checkboxes.length === 0) return alert("Debes seleccionar al menos un agente.");
+            
+            const agentesIds = Array.from(checkboxes).map(c => c.value);
+            const fechaInicioStr = document.getElementById('masivo-fecha-inicio').value;
+            const fechaFinStr = document.getElementById('masivo-fecha-fin').value;
+            const horaInicio = document.getElementById('masivo-hora-inicio').value;
+            const horaFin = document.getElementById('masivo-hora-fin').value;
+            const canal = document.getElementById('masivo-canal').value;
+            const omitirFines = document.getElementById('masivo-omitir-fines').checked;
+
+            if (!fechaInicioStr || !fechaFinStr || !horaInicio || !horaFin) return alert("Llena todos los campos de fecha y hora.");
+
+            const fechaInicio = new Date(fechaInicioStr + 'T00:00:00');
+            const fechaFin = new Date(fechaFinStr + 'T00:00:00');
+            let payload = [];
+
+            for (let d = new Date(fechaInicio); d <= fechaFin; d.setDate(d.getDate() + 1)) {
+                const diaSemana = d.getDay(); 
+                if (omitirFines && (diaSemana === 0 || diaSemana === 6)) continue; 
+
+                const fechaStr = d.toISOString().split('T')[0];
+
+                agentesIds.forEach(agenteId => {
+                    payload.push({
+                        agente_id: agenteId,
+                        fecha: fechaStr,
+                        hora_inicio: horaInicio,
+                        hora_fin: horaFin,
+                        canal: canal,
+                        tipo: 'turno'
+                    });
+                });
+            }
+
+            if (payload.length === 0) return alert("No se generaron turnos (revisa las fechas o los fines de semana).");
+
+            btn.textContent = "Guardando...";
+            btn.disabled = true;
+
+            const { error } = await supabaseClient.from('plan_diario').insert(payload);
+
+            btn.textContent = "Generar Turnos";
+            btn.disabled = false;
+
+            if (error) return alert("Error al guardar en masa: " + error.message);
+
+            alert(`✅ ¡Éxito! Se generaron ${payload.length} turnos.`);
+            cerrarModalMasivo();
+            cargarHorariosDelDia();
+        }
+
+        // --- LÓGICA DE COBERTURA ---
+        let metasGlobales = {}; 
+
+        async function cargarCobertura() {
+            const fecha = document.getElementById('fecha-cobertura').value;
+            const tabla = document.getElementById('tabla-cobertura');
+            const thead = document.getElementById('thead-cobertura');
+
+            thead.innerHTML = `<th class="px-4 py-3 text-left sticky left-0 bg-brand-dark z-10 border-r border-brand-mid">Canal</th>`;
+            horasMostrar.forEach(h => {
+                thead.innerHTML += `<th class="px-2 py-2 border-r border-brand-mid bg-brand-mid text-xs">${h.toString().padStart(2, '0')}:00</th>`;
+            });
+            thead.innerHTML += `<th class="px-2 py-2 bg-brand-dark text-xs">Total Req</th>`;
+
+            const { data: turnos } = await supabaseClient.from('plan_diario').select('*, agentes(factor_productividad)').eq('fecha', fecha);
+            const { data: ausencias } = await supabaseClient.from('ausencias').select('agente_id').eq('fecha', fecha);
+            const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
+            
+            if (!turnos || turnos.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="18" class="px-6 py-8 text-center text-gray-400 font-bold">No hay turnos programados para esta fecha</td></tr>';
+                return;
+            }
+
+            const agentesAusentes = new Set(ausencias ? ausencias.map(a => a.agente_id) : []);
+            const parseTime = (timeStr) => {
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            tabla.innerHTML = '';
+
+            canales.forEach(canal => {
+                let filaHTML = `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-3 text-left font-bold text-brand-dark sticky left-0 bg-white border-r uppercase">${canal}</td>`;
+                let totalReqCanal = 0;
+
+                horasMostrar.forEach(hora => {
+                    const horaInicioMin = hora * 60;
+                    
+                    const agentesEnHora = turnos.filter(t => {
+                        if (t.canal !== canal) return false;
+                        if (agentesAusentes.has(t.agente_id)) return false;
+                        const tInicio = parseTime(t.hora_inicio);
+                        const tFin = parseTime(t.hora_fin);
+                        return tInicio <= horaInicioMin && tFin > horaInicioMin;
+                    });
+
+                    let capacidadEfectiva = 0;
+                    agentesEnHora.forEach(t => { capacidadEfectiva += (t.agentes?.factor_productividad || 1.0); });
+                    capacidadEfectiva = Math.round(capacidadEfectiva * 10) / 10;
+
+                    const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
+                    const req = reqObj ? reqObj.agentes_requeridos : 0;
+                    totalReqCanal += req;
+
+                    let bgClass = 'bg-white';
+                    let textClass = 'text-gray-400';
+                    let displayText = `<span class="opacity-30">-</span>`;
+
+                    if (req > 0) {
+                        if (capacidadEfectiva >= req) {
+                            bgClass = 'bg-green-100'; textClass = 'text-green-800 font-bold';
+                            displayText = `${capacidadEfectiva} <span class="text-[10px] opacity-70">/ ${req}</span>`;
+                        } else {
+                            bgClass = 'bg-red-200'; textClass = 'text-red-800 font-bold';
+                            displayText = `<span class="text-red-600 font-extrabold">${capacidadEfectiva}</span> <span class="text-[10px] opacity-70">/ ${req}</span>`;
+                        }
+                    } else if (capacidadEfectiva > 0) {
+                        textClass = 'text-gray-800 font-bold';
+                        displayText = `${capacidadEfectiva} <span class="text-[10px] text-gray-400 font-normal">/ 0</span>`;
+                    }
+
+                    filaHTML += `<td class="px-2 py-3 text-center border-r ${bgClass} ${textClass}">${displayText}</td>`;
+                });
+
+                filaHTML += `<td class="px-2 py-3 text-center font-extrabold text-brand-teal bg-brand-light">${totalReqCanal}</td></tr>`;
+                tabla.innerHTML += filaHTML;
+            });
+        }
+
+        // --- MODAL DE METAS ---
+        async function abrirModalMetas() {
+            const fecha = document.getElementById('fecha-cobertura').value;
+            const modal = document.getElementById('modal-metas');
+            const contenedor = document.getElementById('contenedor-inputs-metas');
+            
+            const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
+            metasGlobales = {};
+            
+            contenedor.innerHTML = '<p class="text-center text-gray-500 py-4">Cargando metas...</p>';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            let htmlTabla = `<table class="w-full text-xs text-center border-collapse">
+                <thead><tr class="bg-gray-100"><th class="p-2 border text-left">Canal</th>`;
+            horasMostrar.forEach(h => htmlTabla += `<th class="p-1 border">${h}:00</th>`);
+            htmlTabla += `</tr></thead><tbody>`;
+
+            canales.forEach(canal => {
+                htmlTabla += `<tr><td class="p-2 border font-bold bg-gray-50 text-left uppercase">${canal}</td>`;
+                horasMostrar.forEach(hora => {
+                    const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
+                    const val = reqObj ? reqObj.agentes_requeridos : 0;
+                    metasGlobales[`${canal}-${hora}`] = val;
+                    htmlTabla += `<td class="p-1 border"><input type="number" min="0" max="50" value="${val}" class="w-10 text-center border rounded p-1 text-xs focus:ring-1 focus:ring-brand-teal focus:outline-none" onchange="metasGlobales['${canal}-${hora}'] = parseInt(this.value) || 0"></td>`;
+                });
+                htmlTabla += `</tr>`;
+            });
+            htmlTabla += `</tbody></table>`;
+            contenedor.innerHTML = htmlTabla;
+        }
+
+        function cerrarModalMetas() {
+            document.getElementById('modal-metas').classList.add('hidden');
+            document.getElementById('modal-metas').classList.remove('flex');
+        }
+
+        async function guardarMetas() {
+            const fecha = document.getElementById('fecha-cobertura').value;
+            let datosGuardar = [];
+            for (const [key, val] of Object.entries(metasGlobales)) {
+                if (val > 0) {
+                    const [canal, hora] = key.split('-');
+                    datosGuardar.push({ fecha: fecha, canal: canal, hora: parseInt(hora), agentes_requeridos: val });
+                }
+            }
+            await supabaseClient.from('requerimiento_cobertura').delete().eq('fecha', fecha);
+            if (datosGuardar.length > 0) {
+                const { error } = await supabaseClient.from('requerimiento_cobertura').insert(datosGuardar);
+                if (error) return alert("Error al guardar metas: " + error.message);
+            }
+            cerrarModalMetas();
+            cargarCobertura();
+        }
+
+        // --- LÓGICA DEL DASHBOARD Y PERSONAL ---
+        const hoyStr = new Date().toISOString().split('T')[0];
+
+        async function cargarDashboard() {
+            if (!isAdmin) return;
+            const { count: total } = await supabaseClient.from('agentes').select('*', { count: 'exact', head: true });
+            document.getElementById('kpi-total').textContent = total || 0;
+            const { data: ausencias } = await supabaseClient.from('ausencias').select('*').eq('fecha', hoyStr);
+            document.getElementById('kpi-ausencias').textContent = ausencias ? ausencias.length : 0;
+            const { data: activos } = await supabaseClient.from('status_events').select('*, agentes(nombre)').is('fin', null).order('inicio', { ascending: true });
+            document.getElementById('kpi-auxiliares').textContent = activos ? activos.length : 0;
+            const disponibles = (total || 0) - (ausencias ? ausencias.length : 0) - (activos ? activos.length : 0);
+            document.getElementById('kpi-disponibles').textContent = disponibles < 0 ? 0 : disponibles;
+
+            const { data: registros } = await supabaseClient.from('ausencias').select(`id, tipo, created_at, agentes (nombre)`).order('created_at', { ascending: false }).limit(5);
+            const tabla = document.getElementById('tabla-registros');
+            tabla.innerHTML = registros && registros.length > 0 ? '' : '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No hay registros hoy</td></tr>';
+            if(registros) {
+                registros.forEach(reg => {
+                    const hora = new Date(reg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    let color = reg.tipo === 'falta' ? 'bg-red-100 text-red-700' : (reg.tipo === 'retiro' ? 'bg-gray-200 text-gray-800' : 'bg-purple-100 text-purple-700');
+                    tabla.innerHTML += `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-6 py-4 font-bold text-brand-dark">${reg.agentes?.nombre}</td><td class="px-6 py-4"><span class="${color} text-xs font-bold px-2.5 py-1 rounded-md uppercase">${reg.tipo}</span></td><td class="px-6 py-4 font-medium">${hora}</td></tr>`;
+                });
+            }
+            const listaAux = document.getElementById('lista-auxiliares');
+            listaAux.innerHTML = '';
+            const idsActivosAhora = new Set(); 
+
+            if (activos && activos.length > 0) {
+                activos.forEach(a => {
+                    const minutos = Math.floor((new Date() - new Date(a.inicio)) / 60000);
+                    let icono = a.estado === 'baño' ? '🚽' : (a.estado === 'almuerzo' ? '🍽️' : '📚');
+                    let limite = a.estado === 'baño' ? 15 : (a.estado === 'almuerzo' ? 45 : 60);
+                    let style = minutos >= limite ? 'text-red-700 bg-red-50 border-red-300' : 'text-brand-dark bg-gray-50 border-gray-200';
+                    
+                    listaAux.innerHTML += `<div class="p-3 rounded-lg border ${style} flex justify-between items-center"><div class="flex flex-col"><span class="font-bold text-sm truncate">${a.agentes?.nombre}</span><span class="text-[10px] uppercase font-bold opacity-70">${icono} ${a.estado}</span></div><span class="text-xs font-extrabold whitespace-nowrap">${minutos} min</span></div>`;
+                    
+                    idsActivosAhora.add(a.agente_id);
+
+                    if (minutos >= limite && !agentesNotificadosPorVoz.has(a.agente_id)) {
+                        const nombre = a.agentes?.nombre || "Un agente";
+                        hablar(`Atención. ${nombre} lleva ${minutos} minutos en ${a.estado}.`);
+                        agentesNotificadosPorVoz.add(a.agente_id); 
+                    }
+                });
+            } else {
+                listaAux.innerHTML = '<p class="text-sm text-gray-400 text-center py-6 font-medium">Todos en línea ✨</p>';
+            }
+
+            Array.from(agentesNotificadosPorVoz).forEach(id => {
+                if (!idsActivosAhora.has(id)) {
+                    agentesNotificadosPorVoz.delete(id);
+                }
+            });
+        } 
+
+        async function cargarPersonal() {
+            const { data } = await supabaseClient.from('agentes').select('*').order('nombre');
+            personalGlobal = data || [];
+            renderPersonal(personalGlobal);
+        }
+
+        function renderPersonal(data) {
+            const tabla = document.getElementById('tabla-personal');
+            tabla.innerHTML = '';
+            data.forEach(agente => {
+                let factor = agente.factor_productividad || 1.0;
+                let colorFactor = factor >= 1.1 ? 'bg-green-100 text-green-800' : (factor <= 0.9 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800');
+                
+                tabla.innerHTML += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">${agente.codigo || 'N/A'}</td>
+                        <td class="px-6 py-4 font-bold text-brand-dark">${agente.nombre}</td>
+                        <td class="px-6 py-4 uppercase text-xs font-bold text-brand-mid">${agente.canal_principal}</td>
+                        <td class="px-6 py-4 capitalize text-gray-600">${agente.nivel}</td>
+                        <td class="px-6 py-4"><span class="${colorFactor} text-xs font-bold px-2 py-1 rounded">${factor}</span></td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="abrirModalEditarAgente('${agente.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded transition text-sm font-bold">
+                                ✏️ Editar
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        document.getElementById('filtro-agentes').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            renderPersonal(personalGlobal.filter(a => a.nombre.toLowerCase().includes(term) || (a.codigo && a.codigo.toLowerCase().includes(term))));
+        });
+
+        // --- LÓGICA PARA EDITAR AGENTE ---
+        function abrirModalEditarAgente(id) {
+            agenteEditandoId = id;
+            const agente = personalGlobal.find(a => a.id === id);
+            
+            document.getElementById('edit-nombre').value = agente.nombre;
+            document.getElementById('edit-canal').value = agente.canal_principal;
+            document.getElementById('edit-nivel').value = agente.nivel;
+            document.getElementById('edit-factor').value = agente.factor_productividad || 1.0;
+
+            document.getElementById('modal-editar-agente').classList.remove('hidden');
+            document.getElementById('modal-editar-agente').classList.add('flex');
+        }
+
+        function cerrarModalEditarAgente() {
+            document.getElementById('modal-editar-agente').classList.add('hidden');
+            document.getElementById('modal-editar-agente').classList.remove('flex');
+            agenteEditandoId = null;
+        }
+
+        function actualizarFactorAuto() {
+            const nivel = document.getElementById('edit-nivel').value;
+            const inputFactor = document.getElementById('edit-factor');
+            if (nivel === 'senior') inputFactor.value = 1.2;
+            else if (nivel === 'semi') inputFactor.value = 1.0;
+            else if (nivel === 'junior') inputFactor.value = 0.8;
+        }
+
+        async function guardarEdicionAgente() {
+            if (!agenteEditandoId) return;
+            
+            const nivel = document.getElementById('edit-nivel').value;
+            const canal = document.getElementById('edit-canal').value;
+            const factor = parseFloat(document.getElementById('edit-factor').value);
+
+            const { error } = await supabaseClient.from('agentes').update({
+                nivel: nivel,
+                canal_principal: canal,
+                factor_productividad: factor
+            }).eq('id', agenteEditandoId);
+
+            if (error) return alert("❌ Error al guardar: " + error.message);
+
+            alert("✅ Cambios guardados correctamente");
+            personalGlobal = []; 
+            await cargarPersonal(); 
+            cerrarModalEditarAgente();
+        }
+
+        // --- FUNCIÓN PARA EXPORTAR A CSV/EXCEL ---
+        function descargarCSV(idTabla, nombreArchivo) {
+            const tabla = document.getElementById(idTabla);
+            if (!tabla) return;
+            
+            let filas = tabla.querySelectorAll("tr");
+            let csvContent = "";
+            
+            filas.forEach(fila => {
+                let celdas = fila.querySelectorAll("td, th");
+                let datosFila = [];
+                celdas.forEach(celda => {
+                    let texto = celda.innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""').trim();
+                    datosFila.push(`"${texto}"`);
+                });
+                csvContent += datosFila.join(";") + "\n";
+            });
+
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${nombreArchivo}_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- LÓGICA INSIGHTS ---
+        async function cargarInsights() {
+            const { data: tendencia } = await supabaseClient.from('vista_tendencia_ausentismo').select('*').single();
+            const divTendencia = document.getElementById('insight-tendencia');
+            if (tendencia) {
+                let actual = tendencia.actual || 0;
+                let anterior = tendencia.anterior || 0;
+                let diferencia = actual - anterior;
+                let color = diferencia > 0 ? 'text-red-500' : (diferencia < 0 ? 'text-green-500' : 'text-gray-500');
+                let icono = diferencia > 0 ? '📈' : (diferencia < 0 ? '📉' : '➡️');
+                let texto = diferencia === 0 ? 'Igual que el mes pasado' : (diferencia > 0 ? `+${diferencia} más que el mes pasado` : `${Math.abs(diferencia)} menos que el mes pasado`);
+                
+                divTendencia.innerHTML = `
+                    <div><p class="text-4xl font-extrabold text-brand-dark">${actual}</p><p class="text-xs text-gray-500 font-bold">Faltas este mes</p></div>
+                    <div class="mt-2 ${color}"><p class="text-sm font-bold">${icono} ${anterior} (Mes anterior)</p><p class="text-xs font-bold">${texto}</p></div>
+                `;
+            }
+
+            const { data: canales } = await supabaseClient.from('vista_canales_criticos').select('*').limit(1);
+            const divCanal = document.getElementById('insight-canal');
+            if (canales && canales.length > 0) {
+                const canalTop = canales[0];
+                divCanal.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold">${canalTop.canal_principal.substring(0,2).toUpperCase()}</div>
+                        <div><p class="text-lg font-extrabold text-brand-dark uppercase">${canalTop.canal_principal}</p><p class="text-xs text-gray-500">Lleva <strong class="text-red-500">${canalTop.total_faltas} ausencias</strong> este mes.</p></div>
+                    </div>
+                `;
+            } else {
+                divCanal.innerHTML = '<p class="text-green-500 font-bold text-sm">Todo bajo control. No hay ausencias.</p>';
+            }
+
+            const { data: horarios } = await supabaseClient.from('vista_horarios_riesgo').select('*');
+            const divHorarios = document.getElementById('insight-horarios');
+            if (horarios && horarios.length > 0) {
+                divHorarios.innerHTML = '';
+                horarios.forEach(h => {
+                    divHorarios.innerHTML += `<div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100"><span class="font-bold text-gray-700 text-[11px]">Turnos que inician a las ${h.hora_inicio_turno}:00</span><span class="bg-orange-200 text-orange-800 text-[10px] font-bold px-2 py-1 rounded">${h.total_faltas} faltas</span></div>`;
+                });
+            } else {
+                divHorarios.innerHTML = '<p class="text-gray-400 text-sm">No hay suficientes datos.</p>';
+            }
+
+            const { data: impacto } = await supabaseClient.from('vista_impacto_cobertura').select('*').single();
+            const divImpacto = document.getElementById('insight-impacto');
+            if (impacto) {
+                divImpacto.innerHTML = `
+                    <div><p class="text-4xl font-extrabold text-brand-dark">${impacto.horas_totales_perdidas} <span class="text-lg text-gray-500">hrs</span></p><p class="text-xs text-gray-500 font-bold mb-2">Total de horas de trabajo perdidas.</p></div>
+                    <div class="flex gap-2 text-xs font-bold mt-auto">
+                        <div class="bg-red-50 text-red-700 p-2 rounded flex-1 border border-red-100"><p class="text-[9px] uppercase opacity-70">Por Faltas</p><p>${impacto.horas_faltas} hrs</p></div>
+                        <div class="bg-orange-50 text-orange-700 p-2 rounded flex-1 border border-orange-100"><p class="text-[9px] uppercase opacity-70">Exceso Aux.</p><p>${impacto.horas_auxiliares} hrs</p></div>
+                    </div>
+                `;
+            }
+
+            const divRecomendaciones = document.getElementById('insight-recomendaciones');
+            let recomendaciones = [];
+            if (tendencia && tendencia.actual > tendencia.anterior) recomendaciones.push(`⚠️ El ausentismo ha subido. Revisa si hay algún factor externo (clima, exámenes, etc.) afectando al equipo.`);
+            if (canales && canales.length > 0) recomendaciones.push(`🎯 El canal <strong>${canales[0].canal_principal.toUpperCase()}</strong> es el más afectado. Te sugerimos priorizar la asignación de agentes Senior a este canal mañana.`);
+            if (horarios && horarios.length > 0) recomendaciones.push(`⏰ Los turnos que inician a las <strong>${horarios[0].hora_inicio_turno}:00</strong> tienen el mayor índice de faltas. Considera tener 1 agente "volante" en ese horario.`);
+            if (recomendaciones.length === 0) recomendaciones.push(`✅ La operación se mantiene estable. Mantén el monitoreo de las alertas de Telegram para reaccionar rápido.`);
+            divRecomendaciones.innerHTML = recomendaciones.map(r => `<li class="flex items-start gap-2"><span class="text-brand-teal mt-1">•</span> <span>${r}</span></li>`).join('');
+        }
+
+        // --- LÓGICA REPORTES HISTÓRICOS ---
+        function inicializarReportes() {
+            const hoy = new Date();
+            const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            
+            document.getElementById('reporte-fecha-inicio').value = primerDiaMes.toISOString().split('T')[0];
+            document.getElementById('reporte-fecha-fin').value = hoy.toISOString().split('T')[0];
+            
+            cargarReportes();
+        }
+
+        async function cargarReportes() {
+            const fechaInicio = document.getElementById('reporte-fecha-inicio').value;
+            const fechaFin = document.getElementById('reporte-fecha-fin').value;
+            
+            // 1. Cargar Faltas
+            const { data: faltas } = await supabaseClient.from('vista_reporte_faltas')
+                .select('*').gte('fecha', fechaInicio).lte('fecha', fechaFin).order('fecha', { ascending: false });
+
+            const tbodyFaltas = document.querySelector('#tabla-rep-faltas tbody');
+            tbodyFaltas.innerHTML = faltas && faltas.length > 0 ? '' : '<tr><td colspan="4" class="text-center py-4 text-gray-400">No hay faltas en este periodo</td></tr>';
+            if (faltas) {
+                faltas.forEach(f => {
+                    let fFormat = new Date(f.fecha + 'T00:00:00').toLocaleDateString('es-ES');
+                    let color = f.tipo === 'falta' ? 'text-red-600' : 'text-gray-600';
+                    tbodyFaltas.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2 font-medium">${fFormat}</td><td class="px-4 py-2 font-bold text-brand-dark">${f.nombre}</td><td class="px-4 py-2 text-xs uppercase">${f.canal_principal}</td><td class="px-4 py-2 font-bold uppercase ${color}">${f.tipo}</td></tr>`;
+                });
+            }
+
+            // 2. Cargar Excesos
+            const { data: excesos } = await supabaseClient.from('vista_reporte_excesos')
+                .select('*').gte('inicio', fechaInicio + 'T00:00:00').lte('inicio', fechaFin + 'T23:59:59').order('inicio', { ascending: false });
+
+            const tbodyExcesos = document.querySelector('#tabla-rep-excesos tbody');
+            tbodyExcesos.innerHTML = excesos && excesos.length > 0 ? '' : '<tr><td colspan="4" class="text-center py-4 text-gray-400">No hay excesos en este periodo</td></tr>';
+            if (excesos) {
+                excesos.forEach(e => {
+                    let fechaHora = new Date(e.inicio).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+                    let icono = e.estado === 'baño' ? '🚽' : (e.estado === 'almuerzo' ? '🍽️' : '📚');
+                    tbodyExcesos.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-2 font-medium text-xs">${fechaHora}</td><td class="px-4 py-2 font-bold text-brand-dark">${e.nombre}</td><td class="px-4 py-2 capitalize text-xs">${icono} ${e.estado}</td><td class="px-4 py-2 font-extrabold text-red-600">+${e.minutos_excedidos} min</td></tr>`;
+                });
+            }
+
+            // 3. Cargar Adherencia
+            const { data: adherencia } = await supabaseClient.from('vista_reporte_adherencia')
+                .select('*').gte('fecha', fechaInicio).lte('fecha', fechaFin).order('fecha', { ascending: false });
+
+            const tbodyAdherencia = document.querySelector('#tabla-rep-adherencia tbody');
+            tbodyAdherencia.innerHTML = adherencia && adherencia.length > 0 ? '' : '<tr><td colspan="7" class="text-center py-4 text-gray-400">No hay datos de adherencia en este periodo</td></tr>';
+            if (adherencia) {
+                adherencia.forEach(a => {
+                    let fFormat = new Date(a.fecha + 'T00:00:00').toLocaleDateString('es-ES');
+                    let adhColor = a.porcentaje_adherencia >= 90 ? 'text-green-600' : (a.porcentaje_adherencia >= 75 ? 'text-orange-500' : 'text-red-600');
+                    let bgAdh = a.porcentaje_adherencia >= 90 ? 'bg-green-50' : (a.porcentaje_adherencia >= 75 ? 'bg-orange-50' : 'bg-red-50');
+                    
+                    tbodyAdherencia.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-2 font-medium">${fFormat}</td>
+                            <td class="px-4 py-2 font-bold text-brand-dark">${a.nombre}</td>
+                            <td class="px-4 py-2">${a.horas_planificadas}h</td>
+                            <td class="px-4 py-2 text-red-500">-${a.horas_perdidas_falta}h</td>
+                            <td class="px-4 py-2 text-orange-500">-${a.horas_perdidas_exceso}h</td>
+                            <td class="px-4 py-2 font-semibold text-brand-mid">${a.horas_cumplidas}h</td>
+                            <td class="px-4 py-2 text-right">
+                                <span class="inline-block px-2 py-1 rounded font-extrabold ${adhColor} ${bgAdh}">${a.porcentaje_adherencia}%</span>
+                            </td>
+                        </tr>`;
+                });
+            }
+        }
+
+        // --- 👇 LÓGICA SIMULADOR WFM 👇 ---
         let datosSimulacion = {
             turnosBase: [],
-            ausenciasSimuladas: [], // Array de IDs de agentes
-            refuerzosSimulados: [], // Array de objetos {canal, nivel, inicio, fin, factor}
+            ausenciasSimuladas: [], 
+            refuerzosSimulados: [], 
             requerimientos: [],
             agentes: []
         };
@@ -196,7 +1147,6 @@
             const fecha = document.getElementById('sim-fecha').value || new Date().toISOString().split('T')[0];
             document.getElementById('sim-fecha').value = fecha;
             
-            // Cargar datos de la base de datos
             const { data: turnos } = await supabaseClient.from('plan_diario').select('*, agentes(nombre, factor_productividad)').eq('fecha', fecha);
             const { data: agentes } = await supabaseClient.from('agentes').select('id, nombre, nivel').order('nombre');
             const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
@@ -207,7 +1157,6 @@
             datosSimulacion.ausenciasSimuladas = [];
             datosSimulacion.refuerzosSimulados = [];
 
-            // Llenar el select de ausencias
             const selectAusencias = document.getElementById('sim-ausencia-agente');
             selectAusencias.innerHTML = '<option value="">Seleccione Agente...</option>';
             datosSimulacion.agentes.forEach(a => {
@@ -225,8 +1174,6 @@
         function simularAusencia() {
             const agenteId = document.getElementById('sim-ausencia-agente').value;
             if (!agenteId) return alert("Selecciona un agente.");
-            
-            // Verificar si ya está en la lista
             if (!datosSimulacion.ausenciasSimuladas.includes(agenteId)) {
                 datosSimulacion.ausenciasSimuladas.push(agenteId);
                 actualizarListasUI();
@@ -264,7 +1211,6 @@
         }
 
         function actualizarListasUI() {
-            // Lista de Ausencias
             const ulAusencias = document.getElementById('lista-ausencias-sim');
             ulAusencias.innerHTML = '';
             datosSimulacion.ausenciasSimuladas.forEach((id, index) => {
@@ -277,7 +1223,6 @@
                 }
             });
 
-            // Lista de Refuerzos
             const ulRefuerzos = document.getElementById('lista-refuerzos-sim');
             ulRefuerzos.innerHTML = '';
             datosSimulacion.refuerzosSimulados.forEach((r, index) => {
@@ -288,7 +1233,7 @@
             });
         }
 
-        function calcularCapacidadEfectiva(turnos, canal, horaInicioMin, horaFinMin, ausenciasIds) {
+        function calcularCapacidadEfectiva(turnos, canal, horaInicioMin, ausenciasIds) {
             let capacidad = 0;
             turnos.forEach(t => {
                 if (t.canal !== canal) return;
@@ -323,12 +1268,11 @@
                     const horaInicioMin = hora * 60;
                     
                     // 1. Calcular Realidad
-                    const capReal = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, 0, []);
+                    const capReal = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, []);
 
                     // 2. Calcular Simulación (Turnos Base - Ausencias + Refuerzos)
-                    let capSim = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, 0, datosSimulacion.ausenciasSimuladas);
+                    let capSim = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, datosSimulacion.ausenciasSimuladas);
                     
-                    // Sumar refuerzos
                     datosSimulacion.refuerzosSimulados.forEach(r => {
                         if (r.canal === canal) {
                             const rInicio = parseInt(r.inicio.split(':')[0]) * 60 + parseInt(r.inicio.split(':')[1]);
@@ -357,7 +1301,6 @@
                             bgClass = 'bg-red-200'; textClass = 'text-red-800 font-bold';
                             displayText = `${capReal} ➔ <span class="text-red-600">${capSim}</span> / ${req}`;
                             if (capReal >= req && capSim < req) {
-                                // Alerta: Pasó de estar cubierto a déficit
                                 hayImpacto = true;
                                 bgClass = 'bg-orange-300 animate-pulse';
                             }
@@ -372,7 +1315,6 @@
                 tbody.innerHTML += filaHTML;
             });
 
-            // Mostrar mensaje de impacto
             const divResultado = document.getElementById('resultado-simulacion');
             if (hayImpacto) {
                 divResultado.innerHTML = `<div class="bg-red-100 border border-red-300 text-red-700 p-3 rounded-lg text-sm font-bold text-center">
@@ -387,10 +1329,14 @@
             }
         }
 
-        // Recuerda agregar 'simulador' a la lista de vistas ocultas en cambiarPestana()
-        // y llamar a inicializarSimulador() cuando se haga clic.
-
-        // (El resto del código JS se mantiene igual)
+        function iniciarDashboard() {
+            cargarDashboard();
+            setInterval(cargarDashboard, 60000);
+            supabaseClient.channel('schema-db-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'ausencias' }, () => cargarDashboard())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'status_events' }, () => cargarDashboard())
+                .subscribe();
+        }
     </script>
 </body>
 </html>
