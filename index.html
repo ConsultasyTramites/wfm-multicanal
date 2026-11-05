@@ -3,366 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WFM Acarrion - Login Asesores</title>
+    <title>Dashboard - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = { theme: { extend: { colors: { brand: { dark: '#001E54', mid: '#004F7A', teal: '#00A29F', light: '#E6F6F6' } } } } }
     </script>
 </head>
-<body class="bg-gray-100 font-sans p-4 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 flex h-screen overflow-hidden font-sans">
 
-    <!-- VISTA 1: LOGIN -->
-    <div id="login-screen" class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark">
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-extrabold text-brand-dark tracking-tighter">carrión</h1>
-            <p class="text-brand-teal font-semibold tracking-[0.3em] text-xs mb-6">EDUCACIÓN SUPERIOR</p>
-            <h2 class="text-xl font-bold text-gray-700">Portal del Asesor</h2>
-        </div>
-        
-        <div class="space-y-4">
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-1">Correo Institucional</label>
-                <input type="email" id="email" placeholder="ejemplo@acarrion.edu.pe" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50">
+    <!-- LOGIN ADMIN -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border-t-8 border-brand-dark">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-extrabold text-brand-dark tracking-tighter">carrión</h1>
+                <p class="text-brand-teal font-semibold tracking-[0.3em] text-xs mb-4">EDUCACIÓN SUPERIOR</p>
+                <h2 class="text-xl font-bold text-gray-700">Acceso Supervisores</h2>
             </div>
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-1">Contraseña</label>
-                <input type="password" id="password" placeholder="********" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal focus:outline-none bg-gray-50">
+            <div class="space-y-4">
+                <input type="email" id="admin-email" placeholder="Correo de Supervisor" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal bg-gray-50">
+                <input type="password" id="admin-pass" placeholder="Contraseña" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-teal bg-gray-50">
+                <button onclick="loginAdmin()" class="w-full bg-brand-dark hover:bg-brand-mid text-white font-bold py-3 rounded-lg text-sm transition-colors">Ingresar</button>
+                <div id="login-error" class="text-red-500 text-sm text-center hidden font-bold"></div>
             </div>
-            <button onclick="iniciarSesion()" id="btn-login" class="w-full bg-brand-dark hover:bg-brand-mid text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors shadow-sm">
-                Ingresar al Sistema
-            </button>
         </div>
     </div>
 
-    <!-- VISTA 2: APP (Oculta por defecto) -->
-    <div id="app-screen" class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 border-t-8 border-brand-dark hidden">
-        <div class="flex justify-between items-center mb-4 pb-4 border-b">
-            <div>
-                <p class="text-xs text-gray-500 font-bold uppercase">Bienvenido(a)</p>
-                <h1 class="text-lg font-extrabold text-brand-dark" id="nombre-agente">Cargando...</h1>
+    <!-- APP -->
+    <div id="app-screen" class="w-full flex h-screen hidden">
+        <aside class="w-64 bg-brand-dark text-white flex flex-col shadow-xl z-20">
+            <div class="h-24 flex flex-col items-center justify-center border-b border-brand-mid">
+                <h1 class="text-3xl font-extrabold tracking-tighter text-white">carrión</h1>
+                <p class="text-brand-teal font-semibold tracking-[0.3em] text-[10px] mt-1">EDUCACIÓN SUPERIOR</p>
             </div>
-            <div class="flex items-center gap-2">
-                <!-- BOTÓN DE VOZ -->
-                <button id="btn-voz-agente" onclick="toggleVozAgente()" class="text-xs text-brand-dark font-bold bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 transition">🔊</button>
-                <button onclick="cerrarSesion()" class="text-xs text-red-500 font-bold bg-red-50 px-3 py-1.5 rounded hover:bg-red-100 transition">Salir</button>
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <button onclick="cambiarPestana('dashboard')" class="tab-btn w-full flex items-center px-4 py-3 bg-brand-mid text-white rounded-lg transition-colors font-medium text-left">📊 Dashboard</button>
+                <button onclick="cambiarPestana('horarios')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📅 Horarios</button>
+                <button onclick="cambiarPestana('cobertura')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📈 Cobertura</button>
+                <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
+                <button onclick="cambiarPestana('insights')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">💡 Insights</button>
+                <button onclick="cambiarPestana('reportes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📑 Reportes</button>
+                <button onclick="cambiarPestana('simulador')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">🧪 Simulador</button>
+                <!-- NUEVO BOTÓN SOLICITUDES -->
+                <button onclick="cambiarPestana('solicitudes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📝 Solicitudes</button>
+            </nav>
+            <div class="p-4 border-t border-brand-mid">
+                <button onclick="cerrarSesionAdmin()" class="w-full text-xs font-bold text-red-300 hover:text-white bg-red-900/30 py-2 rounded">Cerrar Sesión</button>
             </div>
-        </div>
+        </aside>
 
-        <!-- RECUADRO: HORARIO DEL DÍA -->
-        <div class="mb-4 p-4 bg-brand-light rounded-lg border border-brand-teal/30 flex items-center justify-between shadow-sm">
-            <div>
-                <p class="text-xs font-bold text-brand-teal uppercase tracking-wider mb-1">Mi turno de hoy</p>
-                <p class="text-sm font-bold text-brand-dark" id="horario-info">Cargando horario...</p>
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50">
+            <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
+                <h2 class="text-2xl font-bold text-brand-dark" id="titulo-pestana">Dashboard General</h2>
+                <div class="flex items-center space-x-4">
+                    <button id="btn-voz" onclick="toggleVoz()" class="text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition">
+                        🔊 Voz: ON
+                    </button>
+                    <div class="flex items-center space-x-2 bg-brand-light text-brand-teal px-3 py-1.5 rounded-full text-xs font-bold border border-brand-teal/30">
+                        <div class="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></div>
+                        <span>En Vivo</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- (Tus vistas anteriores intactas: dashboard, horarios, cobertura, personal, insights, reportes, simulador) -->
+            <!-- Para ahorrar espacio en este mensaje, asumo que están idénticas. Aquí debes pegarlas exactamente como las tenías. -->
+            <!-- Por favor, copia desde aquí tu bloque <div id="vista-dashboard"> hasta el cierre del <div id="vista-simulador">. -->
+
+            <!-- VISTA DASHBOARD (Simplificada para el ejemplo, pega la tuya completa) -->
+            <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Total Agentes</p><p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Ausencias Hoy</p><p class="text-4xl font-extrabold text-red-500" id="kpi-ausencias">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-400"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">En Auxiliar</p><p class="text-4xl font-extrabold text-orange-400" id="kpi-auxiliares">0</p></div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Disponibles</p><p class="text-4xl font-extrabold text-green-500" id="kpi-disponibles">0</p></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="px-6 py-4 border-b bg-gray-50/50"><h3 class="text-lg font-bold text-brand-dark">Últimos Registros</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-3">Agente</th><th class="px-6 py-3">Evento</th><th class="px-6 py-3">Hora</th></tr></thead>
+                                <tbody id="tabla-registros"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                        <div class="px-6 py-4 border-b bg-orange-50/50"><h3 class="text-lg font-bold text-orange-600">⏱️ Auxiliares Activos</h3></div>
+                        <div class="p-4 space-y-3 overflow-y-auto flex-1" id="lista-auxiliares"></div>
+                    </div>
+                </div>
             </div>
-            <div class="text-2xl">📅</div>
-        </div>
 
-        <!-- RECUADRO: CONTROL DE TURNO -->
-        <div class="mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm text-center">
-            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Control de Jornada</p>
-            <button id="btn-iniciar-turno" onclick="iniciarTurno()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm">
-                ⏰ Iniciar Turno
-            </button>
-            <button id="btn-finalizar-turno" onclick="finalizarTurno()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-2 rounded-lg text-sm transition-colors shadow-sm hidden">
-                🚪 Finalizar Turno
-            </button>
-            <p id="estado-jornada" class="text-xs font-bold text-gray-500 mt-2"></p>
-        </div>
+            <!-- (VISTA HORARIOS, COBERTURA, PERSONAL, INSIGHTS, REPORTES, SIMULADOR) -->
+            <!-- Pega aquí tus bloques exactos. -->
 
-        <div class="mb-5">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Auxiliares (Pausas)</p>
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="registrarAuxiliar('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🚽 Baño</button>
-                <button onclick="registrarAuxiliar('almuerzo')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🍽️ Almuerzo</button>
-                <button onclick="registrarAuxiliar('capacitacion')" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">📚 Capacitación</button>
-                <button onclick="volverDeAuxiliar()" class="bg-brand-mid hover:bg-blue-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm border-2 border-brand-dark">✅ Volver</button>
+            <!-- 👇 NUEVA VISTA SOLICITUDES 👇 -->
+            <div id="vista-solicitudes" class="p-6 max-w-7xl mx-auto w-full hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark">Gestión de Solicitudes de Permisos</h3>
+                            <p class="text-xs text-gray-500">Aprueba o rechaza las solicitudes. Al aprobar, se registrará automáticamente la ausencia.</p>
+                        </div>
+                        <button onclick="cargarSolicitudesAdmin()" class="bg-brand-teal hover:bg-teal-600 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">🔄 Actualizar</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-3">Fecha Solicitud</th>
+                                    <th class="px-6 py-3">Agente</th>
+                                    <th class="px-6 py-3">Rango</th>
+                                    <th class="px-6 py-3">Tipo</th>
+                                    <th class="px-6 py-3">Motivo</th>
+                                    <th class="px-6 py-3 text-center">Estado</th>
+                                    <th class="px-6 py-3 text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-solicitudes"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
+            <!-- 👆 FIN VISTA SOLICITUDES 👆 -->
 
-        <div>
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Eventos / Ausencias</p>
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="registrarAusencia('falta')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">❌ Falta</button>
-                <button onclick="registrarAusencia('retiro')" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🏃 Retiro</button>
-            </div>
-        </div>
-
-        <div id="mensaje" class="mt-4 text-sm text-center font-bold text-green-700 hidden p-3 bg-green-50 rounded-lg border border-green-200"></div>
+        </main>
     </div>
+
+    <!-- (TUS MODALES: metas, editar-agente, masivo) -->
+    <!-- Pega aquí tus modales exactos. -->
 
     <script>
+        // --- (TU LÓGICA DE VOZ Y CONEXIÓN INTACTA) ---
+        let vozActivada = true;
+        const agentesNotificadosPorVoz = new Set(); 
+        function toggleVoz() { /* ... tu código original ... */ }
+        function hablar(texto) { /* ... tu código original ... */ }
+
         const supabaseUrl = 'https://euidaqedhovrojkfbhhx.supabase.co';
-        const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s'; 
+        const supabaseKey = 'sb_publishable_JrNGn7Is4s04Gd8QjqElag_dXaqiF3s';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let agenteActualId = null;
-        let nombreAgenteActual = "";
-        const fechaHoy = new Date().toISOString().split('T')[0];
+        let isAdmin = false;
+        // ... (tus variables globales) ...
 
-        // --- VARIABLES PARA EL CONTROL DE VOZ Y TIEMPO ---
-        let vozActivadaAgente = true;
-        let intervaloTiempoAuxiliar = null;
-        let horaInicioAuxiliar = null;
-        let limiteAuxiliarMinutos = 0;
-        let tipoAuxiliarActual = "";
-        let ultimoMinutoAvisado = -1;
+        // ... (tus funciones de login, cambiarPestana, horarios, cobertura, dashboard, insights, reportes, simulador) ...
 
-        supabaseClient.auth.getSession().then(({ data: { session } }) => {
-            if (session) mostrarApp(session.user);
-        });
-
-        supabaseClient.auth.onAuthStateChange((_event, session) => {
-            if (session) mostrarApp(session.user);
-            else ocultarApp();
-        });
-
-        async function iniciarSesion() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const btn = document.getElementById('btn-login');
+        function cambiarPestana(pestana) {
+            // AGREGA 'solicitudes' A LA LISTA DE VISTAS A OCULTAR
+            ['dashboard', 'personal', 'horarios', 'cobertura', 'insights', 'reportes', 'simulador', 'solicitudes'].forEach(p => document.getElementById(`vista-${p}`).classList.add('hidden'));
+            document.getElementById(`vista-${pestana}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-mid', 'text-white');
+                btn.classList.add('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
+            });
+            event.target.classList.remove('text-gray-300', 'hover:bg-brand-mid', 'hover:text-white');
+            event.target.classList.add('bg-brand-mid', 'text-white');
             
-            if (!email.endsWith('@acarrion.edu.pe')) return alert("Debes usar tu correo @acarrion.edu.pe");
-
-            btn.textContent = "Verificando...";
-            btn.disabled = true;
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            // AGREGA EL TÍTULO DE SOLICITUDES
+            const titulos = { dashboard: 'Dashboard General', personal: 'Gestión de Personal', horarios: 'Gestión de Horarios', cobertura: 'Análisis de Cobertura', insights: 'Insights WFM', reportes: 'Reportes Históricos', simulador: 'Simulador WFM', solicitudes: 'Solicitudes de Permisos' };
+            document.getElementById('titulo-pestana').textContent = titulos[pestana];
             
-            btn.textContent = "Ingresar al Sistema";
-            btn.disabled = false;
-
-            if (error) alert("Error al ingresar: " + error.message);
+            if (pestana === 'personal') cargarPersonal();
+            if (pestana === 'horarios') cargarHorariosDelDia();
+            if (pestana === 'cobertura') cargarCobertura();
+            if (pestana === 'insights') cargarInsights(); 
+            if (pestana === 'reportes') inicializarReportes(); 
+            if (pestana === 'simulador') inicializarSimulador();
+            if (pestana === 'solicitudes') cargarSolicitudesAdmin(); // AGREGA ESTA LLAMADA
         }
 
-        async function cerrarSesion() { await supabaseClient.auth.signOut(); }
+        // --- 👇 NUEVAS FUNCIONES DE SOLICITUDES PARA EL ADMIN 👇 ---
+        async function cargarSolicitudesAdmin() {
+            const { data, error } = await supabaseClient.from('solicitudes_permiso')
+                .select('*, agentes(nombre)')
+                .order('created_at', { ascending: false });
 
-        async function mostrarApp(user) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('hidden');
+            const tbody = document.getElementById('tabla-solicitudes');
+            tbody.innerHTML = '';
 
-            const { data } = await supabaseClient.from('agentes').select('id, nombre').eq('user_id', user.id).single();
-            
-            if (data) {
-                agenteActualId = data.id;
-                nombreAgenteActual = data.nombre;
-                document.getElementById('nombre-agente').textContent = data.nombre;
-
-                // Cargar Horario
-                const { data: horario } = await supabaseClient.from('plan_diario')
-                    .select('hora_inicio, hora_fin, canal')
-                    .eq('agente_id', agenteActualId)
-                    .eq('fecha', fechaHoy)
-                    .single();
-
-                const infoHorario = document.getElementById('horario-info');
-                if (horario) {
-                    infoHorario.innerHTML = `<span class="text-brand-teal font-extrabold text-base">${horario.hora_inicio.substring(0,5)} - ${horario.hora_fin.substring(0,5)}</span> | Canal: <span class="uppercase font-bold">${horario.canal}</span>`;
-                } else {
-                    infoHorario.textContent = "Día libre / No asignado";
-                    infoHorario.classList.add('text-gray-400');
-                }
-
-                // Cargar Estado de Jornada y Pausas Activas
-                verificarEstadoJornada();
-                verificarPausaActivaAlRecargar();
-
-            } else {
-                document.getElementById('nombre-agente').textContent = "Supervisor / Admin";
-                document.getElementById('horario-info').textContent = "Modo Administrador";
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500 py-4">Error: ${error.message}</td></tr>`;
+                return;
             }
-        }
 
-        function ocultarApp() {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('app-screen').classList.add('hidden');
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-            if (intervaloTiempoAuxiliar) clearInterval(intervaloTiempoAuxiliar);
-        }
+            if (data && data.length > 0) {
+                data.forEach(sol => {
+                    let fechaCreacion = new Date(sol.created_at).toLocaleDateString('es-ES');
+                    let badgeEstado = '';
+                    let botones = '';
 
-        function mostrarMensaje(texto, color = "green") {
-            const msgDiv = document.getElementById('mensaje');
-            msgDiv.textContent = texto;
-            msgDiv.className = `mt-4 text-sm text-center font-bold text-${color}-700 p-3 bg-${color}-50 rounded-lg border border-${color}-200`;
-            msgDiv.classList.remove('hidden');
-            setTimeout(() => msgDiv.classList.add('hidden'), 3500);
-        }
-
-        // --- LÓGICA DE VOZ DEL ASESOR ---
-        function toggleVozAgente() {
-            vozActivadaAgente = !vozActivadaAgente;
-            const btn = document.getElementById('btn-voz-agente');
-            if (vozActivadaAgente) {
-                btn.innerHTML = "🔊";
-                btn.classList.remove('bg-red-100', 'text-red-600');
-                btn.classList.add('bg-gray-100', 'text-brand-dark');
-            } else {
-                btn.innerHTML = "🔇";
-                btn.classList.add('bg-red-100', 'text-red-600');
-                btn.classList.remove('bg-gray-100', 'text-brand-dark');
-                window.speechSynthesis.cancel();
-            }
-        }
-
-        function alertarVozExceso(minutosTotales, minutosExceso) {
-            if (!vozActivadaAgente) return;
-            if (!('speechSynthesis' in window)) return;
-
-            const msg = new SpeechSynthesisUtterance(`Atención ${nombreAgenteActual}. Recuerda que el auxiliar de ${tipoAuxiliarActual} tiene un límite de ${limiteAuxiliarMinutos} minutos. Llevas ${minutosExceso} minutos en exceso. Por favor, marca Volver a laborar.`);
-            msg.lang = 'es-ES';
-            msg.rate = 1.0;
-            window.speechSynthesis.speak(msg);
-        }
-
-        function iniciarContadorAuxiliar(tipo, horaInicioStr) {
-            if (intervaloTiempoAuxiliar) clearInterval(intervaloTiempoAuxiliar);
-            
-            tipoAuxiliarActual = tipo;
-            horaInicioAuxiliar = new Date(horaInicioStr);
-            ultimoMinutoAvisado = -1;
-
-            // Definimos los límites (puedes cambiarlos aquí)
-            if (tipo === 'baño') limiteAuxiliarMinutos = 15;
-            else if (tipo === 'almuerzo') limiteAuxiliarMinutos = 60;
-            else if (tipo === 'capacitacion') limiteAuxiliarMinutos = 60;
-
-            // Empezar a revisar cada 10 segundos
-            intervaloTiempoAuxiliar = setInterval(() => {
-                const ahora = new Date();
-                const minutosTranscurridos = Math.floor((ahora - horaInicioAuxiliar) / 60000);
-                
-                if (minutosTranscurridos > limiteAuxiliarMinutos) {
-                    const exceso = minutosTranscurridos - limiteAuxiliarMinutos;
-                    // Solo avisa una vez por cada minuto nuevo
-                    if (ultimoMinutoAvisado !== minutosTranscurridos) {
-                        alertarVozExceso(minutosTranscurridos, exceso);
-                        ultimoMinutoAvisado = minutosTranscurridos;
+                    if (sol.estado === 'pendiente') {
+                        badgeEstado = '<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold">⏳ Pendiente</span>';
+                        botones = `
+                            <div class="flex gap-2 justify-center">
+                                <button onclick="actualizarSolicitud('${sol.id}', 'aprobado')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-bold transition">Aprobar</button>
+                                <button onclick="actualizarSolicitud('${sol.id}', 'rechazado')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-bold transition">Rechazar</button>
+                            </div>
+                        `;
+                    } else if (sol.estado === 'aprobado') {
+                        badgeEstado = '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">✅ Aprobado</span>';
+                    } else {
+                        badgeEstado = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">❌ Rechazado</span>';
                     }
-                }
-            }, 10000); // Revisa cada 10 segundos
-        }
 
-        async function verificarPausaActivaAlRecargar() {
-            if (!agenteActualId) return;
-            const { data: activos } = await supabaseClient.from('status_events')
-                .select('*')
-                .eq('agente_id', agenteActualId)
-                .is('fin', null)
-                .maybeSingle();
-
-            if (activos) {
-                // El asesor recargó la página pero sigue en pausa, retomamos el contador
-                iniciarContadorAuxiliar(activos.estado, activos.inicio);
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 text-xs font-medium">${fechaCreacion}</td>
+                            <td class="px-6 py-4 font-bold text-brand-dark">${sol.agentes?.nombre || 'Desconocido'}</td>
+                            <td class="px-6 py-4 font-medium text-brand-mid">${sol.fecha_inicio} al ${sol.fecha_fin}</td>
+                            <td class="px-6 py-4 capitalize text-xs">${sol.tipo.replace('_', ' ')}</td>
+                            <td class="px-6 py-4 text-xs text-gray-500">${sol.motivo || '-'}</td>
+                            <td class="px-6 py-4 text-center">${badgeEstado}</td>
+                            <td class="px-6 py-4 text-center">${botones}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-400">No hay solicitudes registradas.</td></tr>';
             }
         }
 
-        // --- LÓGICA DE JORNADA ---
-        async function verificarEstadoJornada() {
-            if (!agenteActualId) return;
+        async function actualizarSolicitud(id, nuevoEstado) {
+            if (!confirm(`¿Estás seguro de marcar esta solicitud como ${nuevoEstado.toUpperCase()}?`)) return;
 
-            const { data } = await supabaseClient.from('registro_jornada')
-                .select('*')
-                .eq('agente_id', agenteActualId)
-                .eq('fecha', fechaHoy)
-                .single();
+            const { error } = await supabaseClient
+                .from('solicitudes_permiso')
+                .update({ estado: nuevoEstado })
+                .eq('id', id);
 
-            const btnIniciar = document.getElementById('btn-iniciar-turno');
-            const btnFinalizar = document.getElementById('btn-finalizar-turno');
-            const txtEstado = document.getElementById('estado-jornada');
+            if (error) return alert("Error al actualizar: " + error.message);
 
-            if (!data) {
-                btnIniciar.classList.remove('hidden');
-                btnFinalizar.classList.add('hidden');
-                txtEstado.textContent = "No has iniciado tu turno aún.";
-            } else if (data && !data.hora_fin_real) {
-                btnIniciar.classList.add('hidden');
-                btnFinalizar.classList.remove('hidden');
-                let horaInicio = new Date(data.hora_inicio_real).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                txtEstado.innerHTML = `<span class="text-green-600">Turno iniciado a las ${horaInicio}</span>`;
-            } else if (data && data.hora_fin_real) {
-                btnIniciar.classList.add('hidden');
-                btnFinalizar.classList.add('hidden');
-                txtEstado.innerHTML = `<span class="text-gray-400">Turno finalizado por hoy ✔️</span>`;
-            }
+            alert(`Solicitud ${nuevoEstado} correctamente.`);
+            cargarSolicitudesAdmin();
         }
 
-        async function iniciarTurno() {
-            if (!agenteActualId) return;
-            
-            const { error } = await supabaseClient.from('registro_jornada').insert([{
-                agente_id: agenteActualId,
-                fecha: fechaHoy,
-                hora_inicio_real: new Date().toISOString()
-            }]);
-
-            if (error) return alert("Error al iniciar turno: " + error.message);
-            
-            mostrarMensaje("Turno iniciado correctamente", "green");
-            verificarEstadoJornada();
-        }
-
-        async function finalizarTurno() {
-            if (!agenteActualId) return;
-            
-            const { error } = await supabaseClient.from('registro_jornada').update({
-                hora_fin_real: new Date().toISOString()
-            }).eq('agente_id', agenteActualId).eq('fecha', fechaHoy);
-
-            if (error) return alert("Error al finalizar turno: " + error.message);
-            
-            mostrarMensaje("Turno finalizado correctamente", "red");
-            verificarEstadoJornada();
-        }
-
-        // --- LÓGICA DE PAUSAS Y AUSENCIAS ---
-        async function registrarAuxiliar(estado) {
-            if (!agenteActualId) return alert("No se encontró tu perfil de agente.");
-
-            const { data: activos } = await supabaseClient.from('status_events').select('id').eq('agente_id', agenteActualId).is('fin', null);
-            if (activos && activos.length > 0) return alert("Ya tienes una pausa activa. Debes marcar 'Volver' primero.");
-
-            const horaSalida = new Date().toISOString();
-
-            const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteActualId, estado: estado, inicio: horaSalida }]);
-            if (error) return alert("Error: " + error.message);
-            
-            mostrarMensaje(`Salida a ${estado.toUpperCase()} registrada`, "teal");
-            
-            // Iniciar temporizador y voz
-            iniciarContadorAuxiliar(estado, horaSalida);
-        }
-
-        async function volverDeAuxiliar() {
-            if (!agenteActualId) return;
-
-            const { data: activos, error } = await supabaseClient
-                .from('status_events')
-                .update({ fin: new Date().toISOString() })
-                .eq('agente_id', agenteActualId)
-                .is('fin', null)
-                .select();
-
-            if (error) return alert("Error: " + error.message);
-            if (activos.length === 0) return alert("No tienes ninguna pausa activa pendiente.");
-            
-            mostrarMensaje("Regreso a laborar registrado", "blue");
-
-            // Detener temporizador y voz
-            if (intervaloTiempoAuxiliar) clearInterval(intervaloTiempoAuxiliar);
-            window.speechSynthesis.cancel(); // Detener cualquier voz en curso
-            horaInicioAuxiliar = null;
-            ultimoMinutoAvisado = -1;
-        }
-
-        async function registrarAusencia(tipo) {
-            if (!agenteActualId) return;
-
-            const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteActualId, fecha: fechaHoy, tipo: tipo, motivo: 'Web App' }]);
-            
-            if (error) return alert("Error: " + error.message);
-            mostrarMensaje(`Registro de ${tipo.toUpperCase()} guardado`, "red");
-        }
+        // ... (Tus demás funciones de JS) ...
     </script>
 </body>
 </html>
