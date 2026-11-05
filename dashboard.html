@@ -43,7 +43,6 @@
                 <button onclick="cambiarPestana('personal')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">👥 Personal</button>
                 <button onclick="cambiarPestana('insights')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">💡 Insights</button>
                 <button onclick="cambiarPestana('reportes')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">📑 Reportes</button>
-                <!-- NUEVO BOTÓN SIMULADOR -->
                 <button onclick="cambiarPestana('simulador')" class="tab-btn w-full flex items-center px-4 py-3 text-gray-300 hover:bg-brand-mid hover:text-white rounded-lg transition-colors font-medium text-left">🧪 Simulador</button>
             </nav>
             <div class="p-4 border-t border-brand-mid">
@@ -255,7 +254,7 @@
                     </div>
                 </div>
 
-                <!-- TABLA DE ADHERENCIA -->
+                <!-- TABLA DE ADHERENCIA EXACTA -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
                     <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
                         <div>
@@ -266,7 +265,6 @@
                     </div>
                     <div class="overflow-x-auto flex-1">
                         <table id="tabla-rep-adherencia" class="w-full text-sm text-left text-gray-500">
-                            <!-- AQUI ESTA EL CAMBIO 1: NUEVO THEAD -->
                             <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
                                 <tr>
                                     <th class="px-3 py-3">Fecha</th>
@@ -1113,7 +1111,7 @@
                 });
             }
 
-            // 3. Cargar Adherencia Exacta (CON NUEVOS DATOS)
+            // 3. Cargar Adherencia Exacta
             const { data: adherencia } = await supabaseClient.from('vista_reporte_adherencia')
                 .select('*').gte('fecha', fechaInicio).lte('fecha', fechaFin).order('fecha', { ascending: false });
 
