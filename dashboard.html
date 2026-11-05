@@ -65,7 +65,7 @@
                 </div>
             </header>
 
-            <!-- VISTA DASHBOARD (RESTAURADA CORRECTAMENTE) -->
+            <!-- VISTA DASHBOARD -->
             <div id="vista-dashboard" class="p-6 max-w-7xl mx-auto w-full">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-dark"><p class="text-sm font-bold text-gray-400 mb-1 uppercase">Total Agentes</p><p class="text-4xl font-extrabold text-brand-dark" id="kpi-total">0</p></div>
@@ -259,16 +259,23 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
                     <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
                         <div>
-                            <h3 class="text-lg font-bold text-brand-dark">Adherencia: Planificado vs. Ejecución Real</h3>
-                            <p class="text-xs text-gray-500">Calculado como (Horas Planificadas - Faltas - Excesos) / Horas Planificadas.</p>
+                            <h3 class="text-lg font-bold text-brand-dark">Adherencia Exacta: Planificado vs. Ejecución Real</h3>
+                            <p class="text-xs text-gray-500">Incluye tardanzas, salidas anticipadas, faltas y excesos.</p>
                         </div>
                         <button onclick="descargarCSV('tabla-rep-adherencia', 'Reporte_Adherencia')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
                     </div>
                     <div class="overflow-x-auto flex-1">
                         <table id="tabla-rep-adherencia" class="w-full text-sm text-left text-gray-500">
+                            <!-- AQUI ESTA EL CAMBIO 1: NUEVO THEAD -->
                             <thead class="text-xs text-gray-400 uppercase bg-gray-50 border-b">
                                 <tr>
-                                    <th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Agente</th><th class="px-4 py-3">Hrs Plan.</th><th class="px-4 py-3">Hrs Faltas</th><th class="px-4 py-3">Hrs Excesos</th><th class="px-4 py-3">Hrs Cumplidas</th><th class="px-4 py-3 text-right">% Adherencia</th>
+                                    <th class="px-3 py-3">Fecha</th>
+                                    <th class="px-3 py-3">Agente</th>
+                                    <th class="px-3 py-3 text-center">Hrs Plan.</th>
+                                    <th class="px-3 py-3 text-center text-red-500">Tardanza</th>
+                                    <th class="px-3 py-3 text-center text-orange-500">Sal. Anticipada</th>
+                                    <th class="px-3 py-3 text-center">Faltas/Excesos</th>
+                                    <th class="px-3 py-3 text-right">% Adherencia</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -277,7 +284,7 @@
                 </div>
             </div>
 
-            <!-- 👇 VISTA SIMULADOR 👇 -->
+            <!-- VISTA SIMULADOR -->
             <div id="vista-simulador" class="p-6 max-w-7xl mx-auto w-full hidden">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 p-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b pb-4">
@@ -362,7 +369,6 @@
                     </div>
                 </div>
             </div>
-            <!-- 👆 FIN VISTA SIMULADOR 👆 -->
 
         </main>
     </div>
@@ -1107,28 +1113,40 @@
                 });
             }
 
-            // 3. Cargar Adherencia
+            // 3. Cargar Adherencia Exacta (CON NUEVOS DATOS)
             const { data: adherencia } = await supabaseClient.from('vista_reporte_adherencia')
                 .select('*').gte('fecha', fechaInicio).lte('fecha', fechaFin).order('fecha', { ascending: false });
 
             const tbodyAdherencia = document.querySelector('#tabla-rep-adherencia tbody');
             tbodyAdherencia.innerHTML = adherencia && adherencia.length > 0 ? '' : '<tr><td colspan="7" class="text-center py-4 text-gray-400">No hay datos de adherencia en este periodo</td></tr>';
+            
             if (adherencia) {
                 adherencia.forEach(a => {
                     let fFormat = new Date(a.fecha + 'T00:00:00').toLocaleDateString('es-ES');
-                    let adhColor = a.porcentaje_adherencia >= 90 ? 'text-green-600' : (a.porcentaje_adherencia >= 75 ? 'text-orange-500' : 'text-red-600');
-                    let bgAdh = a.porcentaje_adherencia >= 90 ? 'bg-green-50' : (a.porcentaje_adherencia >= 75 ? 'bg-orange-50' : 'bg-red-50');
+                    
+                    // Formato para tardanzas y salidas anticipadas
+                    let txtTardanza = a.minutos_tardanza > 0 ? `<span class="text-red-600 font-bold">+${a.minutos_tardanza}m</span>` : '<span class="text-gray-300">-</span>';
+                    let txtSalida = a.minutos_salida_anticipada > 0 ? `<span class="text-orange-500 font-bold">-${a.minutos_salida_anticipada}m</span>` : '<span class="text-gray-300">-</span>';
+                    
+                    // Resumen de faltas y excesos en horas
+                    let hrsFaltas = a.horas_perdidas_falta > 0 ? `<span class="text-red-400">F: -${a.horas_perdidas_falta}h</span>` : '';
+                    let hrsExcesos = a.horas_perdidas_exceso > 0 ? `<span class="text-orange-400">Aux: -${a.horas_perdidas_exceso}h</span>` : '';
+                    let txtResumen = (hrsFaltas || hrsExcesos) ? `<div class="flex flex-col text-[10px]">${hrsFaltas}<br>${hrsExcesos}</div>` : '<span class="text-gray-300">-</span>';
+
+                    // Colores del % de adherencia
+                    let adhColor = a.porcentaje_adherencia >= 95 ? 'text-green-600' : (a.porcentaje_adherencia >= 85 ? 'text-orange-500' : 'text-red-600');
+                    let bgAdh = a.porcentaje_adherencia >= 95 ? 'bg-green-50' : (a.porcentaje_adherencia >= 85 ? 'bg-orange-50' : 'bg-red-50');
                     
                     tbodyAdherencia.innerHTML += `
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="px-4 py-2 font-medium">${fFormat}</td>
-                            <td class="px-4 py-2 font-bold text-brand-dark">${a.nombre}</td>
-                            <td class="px-4 py-2">${a.horas_planificadas}h</td>
-                            <td class="px-4 py-2 text-red-500">-${a.horas_perdidas_falta}h</td>
-                            <td class="px-4 py-2 text-orange-500">-${a.horas_perdidas_exceso}h</td>
-                            <td class="px-4 py-2 font-semibold text-brand-mid">${a.horas_cumplidas}h</td>
-                            <td class="px-4 py-2 text-right">
-                                <span class="inline-block px-2 py-1 rounded font-extrabold ${adhColor} ${bgAdh}">${a.porcentaje_adherencia}%</span>
+                            <td class="px-3 py-2 font-medium">${fFormat}</td>
+                            <td class="px-3 py-2 font-bold text-brand-dark">${a.nombre}</td>
+                            <td class="px-3 py-2 text-center text-xs">${a.horas_planificadas}h</td>
+                            <td class="px-3 py-2 text-center text-xs">${txtTardanza}</td>
+                            <td class="px-3 py-2 text-center text-xs">${txtSalida}</td>
+                            <td class="px-3 py-2 text-center">${txtResumen}</td>
+                            <td class="px-3 py-2 text-right">
+                                <span class="inline-block px-2 py-1 rounded font-extrabold text-xs ${adhColor} ${bgAdh}">${a.porcentaje_adherencia}%</span>
                             </td>
                         </tr>`;
                 });
