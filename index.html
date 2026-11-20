@@ -69,14 +69,14 @@
             <p id="estado-jornada" class="text-xs font-bold text-gray-500 mt-2"></p>
         </div>
 
-        <!-- AUXILIARES -->
+        <!-- AUXILIARES (CON IDS PARA BLOQUEAR) -->
         <div class="mb-5">
             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Auxiliares (Pausas)</p>
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="registrarAuxiliar('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🚽 Baño</button>
-                <button onclick="registrarAuxiliar('almuerzo')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🍽️ Almuerzo</button>
-                <button onclick="registrarAuxiliar('capacitacion')" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">📚 Capacitación</button>
-                <button onclick="volverDeAuxiliar()" class="bg-brand-mid hover:bg-blue-800 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm border-2 border-brand-dark">✅ Volver</button>
+                <button id="btn-aux-baño" onclick="registrarAuxiliar('baño')" class="bg-brand-teal hover:bg-teal-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🚽 Baño</button>
+                <button id="btn-aux-almuerzo" onclick="registrarAuxiliar('almuerzo')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">🍽️ Almuerzo</button>
+                <button id="btn-aux-capacitacion" onclick="registrarAuxiliar('capacitacion')" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm">📚 Capacitación</button>
+                <button id="btn-aux-volver" onclick="volverDeAuxiliar()" class="bg-gray-300 text-gray-500 font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm cursor-not-allowed pointer-events-none">✅ Volver</button>
             </div>
         </div>
 
@@ -216,6 +216,7 @@
             setTimeout(() => msgDiv.classList.add('hidden'), 3500);
         }
 
+        // --- LÓGICA DE VOZ ---
         function toggleVozAgente() {
             vozActivadaAgente = !vozActivadaAgente;
             const btn = document.getElementById('btn-voz-agente');
@@ -263,6 +264,42 @@
             }, 10000); 
         }
 
+        // --- LÓGICA VISUAL DE BOTONES ---
+        function actualizarEstadoBotonesAuxiliares(estadoActivo) {
+            const btnBaño = document.getElementById('btn-aux-baño');
+            const btnAlmuerzo = document.getElementById('btn-aux-almuerzo');
+            const btnCapacitacion = document.getElementById('btn-aux-capacitacion');
+            const btnVolver = document.getElementById('btn-aux-volver');
+
+            // Clases base originales
+            const baseClasses = "font-bold py-2 px-2 rounded-lg text-sm transition-colors shadow-sm";
+            const disabledClasses = "opacity-50 cursor-not-allowed pointer-events-none";
+            const activeHighlight = "ring-4 ring-offset-2 ring-brand-dark animate-pulse";
+
+            if (estadoActivo) {
+                // Deshabilitar los 3 botones
+                btnBaño.className = `bg-brand-teal text-white ${baseClasses} ${disabledClasses}`;
+                btnAlmuerzo.className = `bg-orange-500 text-white ${baseClasses} ${disabledClasses}`;
+                btnCapacitacion.className = `bg-purple-500 text-white ${baseClasses} ${disabledClasses}`;
+
+                // Resaltar el botón activo
+                if (estadoActivo === 'baño') btnBaño.classList.add(...activeHighlight.split(' '));
+                if (estadoActivo === 'almuerzo') btnAlmuerzo.classList.add(...activeHighlight.split(' '));
+                if (estadoActivo === 'capacitacion') btnCapacitacion.classList.add(...activeHighlight.split(' '));
+
+                // Activar el botón Volver
+                btnVolver.className = `bg-brand-mid hover:bg-blue-800 text-white border-2 border-brand-dark ${baseClasses} animate-pulse`;
+            } else {
+                // Restaurar botones originales
+                btnBaño.className = `bg-brand-teal hover:bg-teal-600 text-white ${baseClasses}`;
+                btnAlmuerzo.className = `bg-orange-500 hover:bg-orange-600 text-white ${baseClasses}`;
+                btnCapacitacion.className = `bg-purple-500 hover:bg-purple-600 text-white ${baseClasses}`;
+
+                // Deshabilitar botón Volver (porque no hay nada que volver)
+                btnVolver.className = `bg-gray-300 text-gray-500 ${baseClasses} cursor-not-allowed pointer-events-none`;
+            }
+        }
+
         async function verificarPausaActivaAlRecargar() {
             if (!agenteActualId) return;
             const { data: activos } = await supabaseClient.from('status_events')
@@ -270,9 +307,16 @@
                 .eq('agente_id', agenteActualId)
                 .is('fin', null)
                 .maybeSingle();
-            if (activos) iniciarContadorAuxiliar(activos.estado, activos.inicio);
+            
+            if (activos) {
+                iniciarContadorAuxiliar(activos.estado, activos.inicio);
+                actualizarEstadoBotonesAuxiliares(activos.estado);
+            } else {
+                actualizarEstadoBotonesAuxiliares(null);
+            }
         }
 
+        // --- LÓGICA DE JORNADA ---
         async function verificarEstadoJornada() {
             if (!agenteActualId) return;
             const { data } = await supabaseClient.from('registro_jornada')
@@ -315,16 +359,21 @@
             verificarEstadoJornada();
         }
 
+        // --- REGISTRO DE AUXILIARES ---
         async function registrarAuxiliar(estado) {
             if (!agenteActualId) return alert("No se encontró tu perfil de agente.");
+            
+            // Doble validación por seguridad
             const { data: activos } = await supabaseClient.from('status_events').select('id').eq('agente_id', agenteActualId).is('fin', null);
             if (activos && activos.length > 0) return alert("Ya tienes una pausa activa. Debes marcar 'Volver' primero.");
 
             const horaSalida = new Date().toISOString();
             const { error } = await supabaseClient.from('status_events').insert([{ agente_id: agenteActualId, estado: estado, inicio: horaSalida }]);
             if (error) return alert("Error: " + error.message);
+            
             mostrarMensaje(`Salida a ${estado.toUpperCase()} registrada`, "teal");
             iniciarContadorAuxiliar(estado, horaSalida);
+            actualizarEstadoBotonesAuxiliares(estado); // Bloquea botones visualmente
         }
 
         async function volverDeAuxiliar() {
@@ -332,15 +381,20 @@
             const { data: activos, error } = await supabaseClient
                 .from('status_events').update({ fin: new Date().toISOString() })
                 .eq('agente_id', agenteActualId).is('fin', null).select();
+            
             if (error) return alert("Error: " + error.message);
             if (activos.length === 0) return alert("No tienes ninguna pausa activa pendiente.");
             
             mostrarMensaje("Regreso a laborar registrado", "blue");
             if (intervaloTiempoAuxiliar) clearInterval(intervaloTiempoAuxiliar);
             window.speechSynthesis.cancel();
-            horaInicioAuxiliar = null; ultimoMinutoAvisado = -1;
+            
+            horaInicioAuxiliar = null; 
+            ultimoMinutoAvisado = -1;
+            actualizarEstadoBotonesAuxiliares(null); // Desbloquea botones visualmente
         }
 
+        // --- AUSENCIAS Y PERMISOS ---
         async function registrarAusencia(tipo) {
             if (!agenteActualId) return;
             const { error } = await supabaseClient.from('ausencias').insert([{ agente_id: agenteActualId, fecha: fechaHoy, tipo: tipo, motivo: 'Web App' }]);
