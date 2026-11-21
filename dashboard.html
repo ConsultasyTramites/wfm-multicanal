@@ -137,7 +137,6 @@
                         <div class="flex flex-wrap items-center gap-3">
                             <label class="text-sm font-bold text-gray-600">Fecha:</label>
                             <input type="date" id="fecha-cobertura" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarCobertura()">
-                            <!-- BOTÓN CON LA NUEVA LÓGICA ERLANG -->
                             <button onclick="abrirModalMetas()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm">⚙️ Configurar Metas</button>
                             <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600 shadow-sm">Actualizar</button>
                             <button onclick="descargarCSV('tabla-cobertura', 'Cobertura')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
@@ -350,6 +349,16 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- NUEVO PANEL DE ASISTENTE IA -->
+                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-lg flex flex-col mt-6">
+                        <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                            🧠 Asistente de Optimización WFM
+                        </h4>
+                        <div id="panel-sugerencias-ia" class="space-y-3 text-sm text-indigo-900">
+                            <p class="text-gray-500">Analizando la operación...</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -401,7 +410,7 @@
         </main>
     </div>
 
-    <!-- MODAL PARA CONFIGURAR METAS (ACTUALIZADO CON LA CALCULADORA ERLANG) -->
+    <!-- MODAL PARA CONFIGURAR METAS -->
     <div id="modal-metas" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
@@ -866,7 +875,6 @@
                     const reqObj = reqs ? reqs.find(r => r.canal === canal && r.hora === hora) : null;
                     const val = reqObj ? reqObj.agentes_requeridos : 0;
                     metasGlobales[`${canal}-${hora}`] = val;
-                    // Se agrega un ID único al input para que la función de autocompletado lo encuentre
                     htmlTabla += `<td class="p-1 border"><input type="number" id="input-meta-${canal}-${hora}" min="0" max="50" value="${val}" class="w-10 text-center border rounded p-1 text-xs focus:ring-1 focus:ring-brand-teal focus:outline-none" onchange="metasGlobales['${canal}-${hora}'] = parseInt(this.value) || 0"></td>`;
                 });
                 htmlTabla += `</tr>`;
@@ -1222,7 +1230,8 @@
             const fecha = document.getElementById('sim-fecha').value || new Date().toISOString().split('T')[0];
             document.getElementById('sim-fecha').value = fecha;
             
-            const { data: turnos } = await supabaseClient.from('plan_diario').select('*, agentes(nombre, factor_productividad)').eq('fecha', fecha);
+            // ACTUALIZADO: Se añade canal_principal y nivel para el motor de IA
+            const { data: turnos } = await supabaseClient.from('plan_diario').select('*, agentes(nombre, factor_productividad, canal_principal, nivel)').eq('fecha', fecha);
             const { data: agentes } = await supabaseClient.from('agentes').select('id, nombre, nivel').order('nombre');
             const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
 
@@ -1397,6 +1406,103 @@
                     ✅ El escenario simulado no genera déficits críticos.
                 </div>`;
             }
+
+            // Llamar al motor de sugerencias IA
+            generarSugerenciasIA();
+        }
+
+        // --- NUEVA FUNCIÓN: MOTOR DE SUGERENCIAS INTELIGENTES (ALGORITMO EXPERTO) ---
+        function generarSugerenciasIA() {
+            const divSugerencias = document.getElementById('panel-sugerencias-ia');
+            divSugerencias.innerHTML = '';
+            let sugerenciasEncontradas = 0;
+
+            for (let i = 0; i < horasMostrar.length; i++) {
+                const hora = horasMostrar[i];
+                const horaInicioMin = hora * 60;
+
+                let deficits = {};
+                let superavits = {};
+                let agentesPorCanal = {};
+
+                // 1. Calcular cobertura, déficit y superávit por canal
+                canales.forEach(canal => {
+                    let capSim = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, datosSimulacion.ausenciasSimuladas);
+                    
+                    datosSimulacion.refuerzosSimulados.forEach(r => {
+                        if (r.canal === canal) {
+                            const rInicio = parseInt(r.inicio.split(':')[0]) * 60 + parseInt(r.inicio.split(':')[1]);
+                            const rFin = parseInt(r.fin.split(':')[0]) * 60 + parseInt(r.fin.split(':')[1]);
+                            if (rInicio <= horaInicioMin && rFin > horaInicioMin) capSim += r.factor;
+                        }
+                    });
+                    capSim = Math.round(capSim * 10) / 10;
+
+                    const reqObj = datosSimulacion.requerimientos.find(req => req.canal === canal && req.hora === hora);
+                    const req = reqObj ? reqObj.agentes_requeridos : 0;
+
+                    const dif = capSim - req;
+                    if (dif < 0) deficits[canal] = Math.abs(dif);
+                    if (dif > 0) superavits[canal] = dif;
+
+                    // Guardar la lista de agentes que están en este canal en esta hora
+                    if (dif > 0) {
+                        agentesPorCanal[canal] = datosSimulacion.turnosBase.filter(t => {
+                            if (t.canal !== canal) return false;
+                            const tInicio = parseInt(t.hora_inicio.split(':')[0]) * 60 + parseInt(t.hora_inicio.split(':')[1]);
+                            const tFin = parseInt(t.hora_fin.split(':')[0]) * 60 + parseInt(t.hora_fin.split(':')[1]);
+                            return tInicio <= horaInicioMin && tFin > horaInicioMin && !datosSimulacion.ausenciasSimuladas.includes(t.agente_id);
+                        });
+                    }
+                });
+
+                // 2. Si hay déficit en algún canal, buscar soluciones
+                for (const [canalDeficit, cantidadFalta] of Object.entries(deficits)) {
+                    
+                    for (const [canalSuperavit, cantidadSobra] of Object.entries(superavits)) {
+                        if (cantidadSobra <= 0) continue;
+
+                        const agentesDisponibles = agentesPorCanal[canalSuperavit] || [];
+                        
+                        // Buscar el mejor candidato: Preferir Multicanal, luego Senior
+                        const agenteIdeal = agentesDisponibles.find(a => a.agentes?.canal_principal === 'multicanal' || a.agentes?.canal_principal === canalDeficit) 
+                                         || agentesDisponibles[0];
+
+                        if (agenteIdeal) {
+                            sugerenciasEncontradas++;
+                            const nombre = agenteIdeal.agentes?.nombre || "Un asesor";
+                            const factor = agenteIdeal.agentes?.factor_productividad || 1.0;
+                            const horaFormat = hora.toString().padStart(2, '0') + ':00';
+
+                            const nuevoDeficit = Math.max(0, cantidadFalta - factor);
+                            const textoImpacto = nuevoDeficit === 0 
+                                ? "cubrirá el 100% del déficit" 
+                                : `reducirá el déficit a ${nuevoDeficit.toFixed(1)} agentes`;
+
+                            divSugerencias.innerHTML += `
+                                <div class="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm mb-2">
+                                    <p class="font-bold text-indigo-800 mb-1">💡 Sugerencia (${horaFormat})</p>
+                                    <p class="text-gray-700">Mueve a <strong>${nombre}</strong> de <strong>${canalSuperavit.toUpperCase()}</strong> a <strong>${canalDeficit.toUpperCase()}</strong>.</p>
+                                    <p class="text-xs text-gray-500 mt-1">Factor: ${factor} | Esto ${textoImpacto}.</p>
+                                </div>
+                            `;
+                            
+                            // Actualizar los cálculos para no repetir al mismo agente
+                            superavits[canalSuperavit] -= factor;
+                            deficits[canalDeficit] -= factor;
+                            // Quitar al agente de la lista para no volver a sugerirlo en esta hora
+                            const index = agentesDisponibles.indexOf(agenteIdeal);
+                            if (index > -1) agentesDisponibles.splice(index, 1);
+
+                            if (deficits[canalDeficit] <= 0) break; 
+                        }
+                    }
+                }
+            }
+
+            if (sugerenciasEncontradas === 0) {
+                divSugerencias.innerHTML = `<p class="text-green-600 font-bold text-center py-4">✅ La operación está balanceada. No se requieren movimientos de personal en este momento.</p>`;
+            }
         }
 
         // --- LÓGICA DE SOLICITUDES ---
@@ -1472,13 +1578,10 @@
             const concurrenciaChat = parseInt(document.getElementById('calc-concurrencia').value) || 1;
             const volCorreoDia = parseInt(document.getElementById('calc-vol-correo').value) || 0;
 
-            // Distribución de volumen por hora (Curva estándar de Call Center)
-            // Hora 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22
             const distribucion = [
                 0.02, 0.06, 0.10, 0.12, 0.10, 0.08, 0.04, 0.08, 0.10, 0.10, 0.08, 0.05, 0.03, 0.02, 0.01, 0.01
             ];
 
-            // Función Erlang C para Voz en JS
             function calcularErlangC(volumen, aht) {
                 if (volumen === 0) return 0;
                 const carga = (volumen * aht) / 3600;
@@ -1490,8 +1593,8 @@
                     }
                     const denom = agentes - carga + (agentes * carga * erlangB);
                     const probEspera = (agentes * carga * erlangB) / denom;
-                    const ns = 1 - probEspera * Math.exp(-(agentes - carga) * 20 / aht); // 20 seg de objetivo
-                    if (ns >= 0.80) return agentes; // 80% Nivel de Servicio
+                    const ns = 1 - probEspera * Math.exp(-(agentes - carga) * 20 / aht); 
+                    if (ns >= 0.80) return agentes; 
                 }
                 return 100;
             }
@@ -1511,23 +1614,18 @@
                     if (canal === 'ccvox') {
                         requerimiento = calcularErlangC(volHoraVoz, ahtVoz);
                     } else if (canal === 'pchat') {
-                        // Carga de trabajo Chat (Tiempo activo 15 min)
                         requerimiento = Math.ceil((volHoraChat * 15) / (60 * concurrenciaChat));
                     } else if (canal === 'correo') {
-                        // Carga de trabajo Correo (Tiempo activo 20 min)
                         requerimiento = Math.ceil((volHoraCorreo * 20) / 60);
                     } else if (canal === 'multicanal') {
-                        // Multicanal asume un 10% de apoyo a los picos
                         requerimiento = Math.ceil((volHoraVoz * 0.1) + (volHoraChat * 0.1));
                     }
 
-                    // Asignar al input y a la variable global
                     input.value = requerimiento;
                     metasGlobales[key] = requerimiento;
                 });
             });
 
-            // Efecto visual para avisar que se calculó
             const btn = event.target;
             const textoOriginal = btn.innerHTML;
             btn.innerHTML = "✅ Calculado";
