@@ -350,7 +350,7 @@
                         </div>
                     </div>
 
-                    <!-- NUEVO PANEL DE ASISTENTE IA -->
+                    <!-- PANEL DE ASISTENTE IA -->
                     <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-lg flex flex-col mt-6">
                         <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
                             🧠 Asistente de Optimización WFM
@@ -473,6 +473,7 @@
         </div>
     </div>
 
+    <!-- MODAL PARA ASIGNACIÓN MASIVA (ACTUALIZADO) -->
     <div id="modal-masivo" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-brand-dark text-white rounded-t-xl">
@@ -487,12 +488,13 @@
                     </div>
                     <div id="lista-checkbox-agentes" class="h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50 grid grid-cols-2 md:grid-cols-3 gap-2"></div>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">2. Rango de Fechas</label>
                         <div class="flex gap-2">
-                            <input type="date" id="masivo-fecha-inicio" class="w-full border rounded-lg p-2 text-sm bg-white">
-                            <input type="date" id="masivo-fecha-fin" class="w-full border rounded-lg p-2 text-sm bg-white">
+                            <input type="date" id="masivo-fecha-inicio" class="w-full border rounded-lg p-2 text-sm bg-white" onchange="verificarDisponibilidadMasiva()">
+                            <input type="date" id="masivo-fecha-fin" class="w-full border rounded-lg p-2 text-sm bg-white" onchange="verificarDisponibilidadMasiva()">
                         </div>
                     </div>
                     <div class="flex items-center mt-5">
@@ -502,7 +504,12 @@
                         </label>
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-4">
+
+                <div class="grid grid-cols-3 gap-4 border-t pt-4">
+                    <div class="col-span-3 flex gap-2 mb-2">
+                        <button onclick="setTurnoRapido('07:00', '16:00')" class="text-xs bg-gray-100 hover:bg-gray-200 text-brand-dark font-bold py-1 px-3 rounded border">☀️ Mañana (07:00 - 16:00)</button>
+                        <button onclick="setTurnoRapido('14:00', '22:00')" class="text-xs bg-gray-100 hover:bg-gray-200 text-brand-dark font-bold py-1 px-3 rounded border">🌙 Tarde (14:00 - 22:00)</button>
+                    </div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Inicio</label><input type="time" id="masivo-hora-inicio" class="w-full border rounded-lg p-2 text-sm bg-white"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Hora Fin</label><input type="time" id="masivo-hora-fin" class="w-full border rounded-lg p-2 text-sm bg-white"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Canal</label><select id="masivo-canal" class="w-full border rounded-lg p-2 text-sm bg-white"><option value="ccvox">CCVOX (Voz)</option><option value="pchat">PCHAT (Telegram)</option><option value="correo">Correo (Trámites)</option><option value="multicanal">Multicanal</option></select></div>
@@ -680,30 +687,65 @@
             cargarHorariosDelDia();
         }
 
-        // --- LÓGICA DE ASIGNACIÓN MASIVA ---
-        function abrirModalMasivo() {
+        // --- LÓGICA DE ASIGNACIÓN MASIVA (ACTUALIZADA) ---
+        async function abrirModalMasivo() {
             const modal = document.getElementById('modal-masivo');
             const contenedor = document.getElementById('lista-checkbox-agentes');
+            contenedor.innerHTML = '<p class="text-xs text-center text-gray-500 py-4">Cargando disponibilidad...</p>';
             
-            contenedor.innerHTML = '';
-            listaAgentesGlobal.forEach(a => {
-                contenedor.innerHTML += `
-                    <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-100 p-1 rounded">
-                        <input type="checkbox" value="${a.id}" class="checkbox-agente w-4 h-4 text-brand-teal rounded focus:ring-brand-teal">
-                        <span class="truncate">${a.nombre}</span>
-                    </label>
-                `;
-            });
-
+            // Fechas por defecto (hoy a +5 días)
             const hoy = new Date();
             const en5Dias = new Date();
             en5Dias.setDate(hoy.getDate() + 5);
+            const fInicio = hoy.toISOString().split('T')[0];
+            const fFin = en5Dias.toISOString().split('T')[0];
             
-            document.getElementById('masivo-fecha-inicio').value = hoy.toISOString().split('T')[0];
-            document.getElementById('masivo-fecha-fin').value = en5Dias.toISOString().split('T')[0];
+            document.getElementById('masivo-fecha-inicio').value = fInicio;
+            document.getElementById('masivo-fecha-fin').value = fFin;
 
+            await verificarDisponibilidadMasiva();
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+        }
+
+        async function verificarDisponibilidadMasiva() {
+            const contenedor = document.getElementById('lista-checkbox-agentes');
+            const fInicio = document.getElementById('masivo-fecha-inicio').value;
+            const fFin = document.getElementById('masivo-fecha-fin').value;
+
+            if(!fInicio || !fFin) return;
+
+            contenedor.innerHTML = '<p class="text-xs text-center text-gray-500 py-4">Verificando...</p>';
+
+            // Consultar quiénes ya tienen turno en ese rango
+            const { data: ocupados } = await supabaseClient
+                .from('plan_diario')
+                .select('agente_id')
+                .gte('fecha', fInicio)
+                .lte('fecha', fFin);
+
+            const idsOcupados = new Set(ocupados ? ocupados.map(o => o.agente_id) : []);
+
+            contenedor.innerHTML = '';
+            listaAgentesGlobal.forEach(a => {
+                const estaOcupado = idsOcupados.has(a.id);
+                const disabledAttr = estaOcupado ? 'disabled' : '';
+                const textClass = estaOcupado ? 'text-gray-400 line-through' : 'text-gray-700';
+                const labelText = estaOcupado ? `${a.nombre} (Ya asignado)` : a.nombre;
+                const bgClass = estaOcupado ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer';
+
+                contenedor.innerHTML += `
+                    <label class="flex items-center space-x-2 text-sm p-1 rounded transition-colors ${bgClass}">
+                        <input type="checkbox" value="${a.id}" class="checkbox-agente w-4 h-4 text-brand-teal rounded focus:ring-brand-teal" ${disabledAttr}>
+                        <span class="truncate ${textClass}">${labelText}</span>
+                    </label>
+                `;
+            });
+        }
+
+        function setTurnoRapido(inicio, fin) {
+            document.getElementById('masivo-hora-inicio').value = inicio;
+            document.getElementById('masivo-hora-fin').value = fin;
         }
 
         function cerrarModalMasivo() {
@@ -712,7 +754,7 @@
         }
 
         function seleccionarTodosAgentes() {
-            const checkboxes = document.querySelectorAll('.checkbox-agente');
+            const checkboxes = document.querySelectorAll('.checkbox-agente:not([disabled])');
             const todosSeleccionados = Array.from(checkboxes).every(c => c.checked);
             checkboxes.forEach(c => c.checked = !todosSeleccionados);
         }
@@ -1230,7 +1272,6 @@
             const fecha = document.getElementById('sim-fecha').value || new Date().toISOString().split('T')[0];
             document.getElementById('sim-fecha').value = fecha;
             
-            // ACTUALIZADO: Se añade canal_principal y nivel para el motor de IA
             const { data: turnos } = await supabaseClient.from('plan_diario').select('*, agentes(nombre, factor_productividad, canal_principal, nivel)').eq('fecha', fecha);
             const { data: agentes } = await supabaseClient.from('agentes').select('id, nombre, nivel').order('nombre');
             const { data: reqs } = await supabaseClient.from('requerimiento_cobertura').select('*').eq('fecha', fecha);
@@ -1411,7 +1452,7 @@
             generarSugerenciasIA();
         }
 
-        // --- NUEVA FUNCIÓN: MOTOR DE SUGERENCIAS INTELIGENTES (ALGORITMO EXPERTO) ---
+        // --- MOTOR DE SUGERENCIAS INTELIGENTES (ALGORITMO EXPERTO) ---
         function generarSugerenciasIA() {
             const divSugerencias = document.getElementById('panel-sugerencias-ia');
             divSugerencias.innerHTML = '';
@@ -1425,7 +1466,6 @@
                 let superavits = {};
                 let agentesPorCanal = {};
 
-                // 1. Calcular cobertura, déficit y superávit por canal
                 canales.forEach(canal => {
                     let capSim = calcularCapacidadEfectiva(datosSimulacion.turnosBase, canal, horaInicioMin, datosSimulacion.ausenciasSimuladas);
                     
@@ -1445,7 +1485,6 @@
                     if (dif < 0) deficits[canal] = Math.abs(dif);
                     if (dif > 0) superavits[canal] = dif;
 
-                    // Guardar la lista de agentes que están en este canal en esta hora
                     if (dif > 0) {
                         agentesPorCanal[canal] = datosSimulacion.turnosBase.filter(t => {
                             if (t.canal !== canal) return false;
@@ -1456,15 +1495,12 @@
                     }
                 });
 
-                // 2. Si hay déficit en algún canal, buscar soluciones
                 for (const [canalDeficit, cantidadFalta] of Object.entries(deficits)) {
-                    
                     for (const [canalSuperavit, cantidadSobra] of Object.entries(superavits)) {
                         if (cantidadSobra <= 0) continue;
 
                         const agentesDisponibles = agentesPorCanal[canalSuperavit] || [];
                         
-                        // Buscar el mejor candidato: Preferir Multicanal, luego Senior
                         const agenteIdeal = agentesDisponibles.find(a => a.agentes?.canal_principal === 'multicanal' || a.agentes?.canal_principal === canalDeficit) 
                                          || agentesDisponibles[0];
 
@@ -1487,10 +1523,8 @@
                                 </div>
                             `;
                             
-                            // Actualizar los cálculos para no repetir al mismo agente
                             superavits[canalSuperavit] -= factor;
                             deficits[canalDeficit] -= factor;
-                            // Quitar al agente de la lista para no volver a sugerirlo en esta hora
                             const index = agentesDisponibles.indexOf(agenteIdeal);
                             if (index > -1) agentesDisponibles.splice(index, 1);
 
