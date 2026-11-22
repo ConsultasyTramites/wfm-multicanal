@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Admin</title>
+    <!-- LIBRERÍA PARA LEER EXCEL -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -137,6 +139,11 @@
                         <div class="flex flex-wrap items-center gap-3">
                             <label class="text-sm font-bold text-gray-600">Fecha:</label>
                             <input type="date" id="fecha-cobertura" class="border rounded-lg px-3 py-1 text-sm bg-white" onchange="cargarCobertura()">
+                            
+                            <!-- NUEVO BOTÓN DE IMPORTAR DEMANDA -->
+                            <button onclick="document.getElementById('input-excel-demanda').click()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📤 Importar Demanda Excel</button>
+                            <input type="file" id="input-excel-demanda" class="hidden" accept=".xlsx, .xls, .csv" onchange="procesarArchivoDemanda(event)">
+
                             <button onclick="abrirModalMetas()" class="bg-brand-dark hover:bg-brand-mid text-white text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm">⚙️ Configurar Metas</button>
                             <button onclick="cargarCobertura()" class="bg-brand-teal text-white text-xs font-bold px-3 py-2 rounded hover:bg-teal-600 shadow-sm">Actualizar</button>
                             <button onclick="descargarCSV('tabla-cobertura', 'Cobertura')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded shadow-sm transition">📥 Exportar</button>
@@ -473,7 +480,7 @@
         </div>
     </div>
 
-    <!-- MODAL PARA ASIGNACIÓN MASIVA (ACTUALIZADO) -->
+    <!-- MODAL PARA ASIGNACIÓN MASIVA -->
     <div id="modal-masivo" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-brand-dark text-white rounded-t-xl">
@@ -687,13 +694,12 @@
             cargarHorariosDelDia();
         }
 
-        // --- LÓGICA DE ASIGNACIÓN MASIVA (ACTUALIZADA) ---
+        // --- LÓGICA DE ASIGNACIÓN MASIVA ---
         async function abrirModalMasivo() {
             const modal = document.getElementById('modal-masivo');
             const contenedor = document.getElementById('lista-checkbox-agentes');
             contenedor.innerHTML = '<p class="text-xs text-center text-gray-500 py-4">Cargando disponibilidad...</p>';
             
-            // Fechas por defecto (hoy a +5 días)
             const hoy = new Date();
             const en5Dias = new Date();
             en5Dias.setDate(hoy.getDate() + 5);
@@ -717,7 +723,6 @@
 
             contenedor.innerHTML = '<p class="text-xs text-center text-gray-500 py-4">Verificando...</p>';
 
-            // Consultar quiénes ya tienen turno en ese rango
             const { data: ocupados } = await supabaseClient
                 .from('plan_diario')
                 .select('agente_id')
@@ -783,7 +788,8 @@
                 const diaSemana = d.getDay(); 
                 if (omitirFines && (diaSemana === 0 || diaSemana === 6)) continue; 
 
-                const fechaStr = d.toISOString().split('T')[0];
+                // CORRECCIÓN DE FECHA (Evita problemas de zona horaria)
+                const fechaStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
                 agentesIds.forEach(agenteId => {
                     payload.push({
@@ -893,7 +899,94 @@
             });
         }
 
-        // --- MODAL DE METAS ---
+        // --- IMPORTAR DEMANDA DESDE EXCEL ---
+        async function procesarArchivoDemanda(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+
+                if (json.length === 0) return alert("El archivo está vacío.");
+
+                const fechaMeta = document.getElementById('fecha-cobertura').value;
+                let payload = [];
+
+                // Leer datos y calcular Erlang
+                json.forEach(row => {
+                    const horaStr = row['Hora']; // ej "08:00"
+                    const canal = row['Canal'].toLowerCase(); // "ccvox", "pchat", "correo"
+                    const volumen = parseFloat(row['Volumen']) || 0;
+                    const aht = parseFloat(row['AHT']) || 0;
+                    
+                    if(!horaStr || !canal || volumen <= 0) return;
+
+                    const horaNum = parseInt(horaStr.split(':')[0]);
+                    let requerimiento = 0;
+
+                    if (canal === 'ccvox') {
+                        // Erlang C
+                        const carga = (volumen * aht) / 3600;
+                        for (let agentes = 1; agentes <= 100; agentes++) {
+                            if (carga >= agentes) continue;
+                            let erlangB = 0;
+                            for (let i = 1; i <= agentes; i++) {
+                                erlangB = (carga * erlangB) / (i + carga * erlangB);
+                            }
+                            const denom = agentes - carga + (agentes * carga * erlangB);
+                            const probEspera = (agentes * carga * erlangB) / denom;
+                            const ns = 1 - probEspera * Math.exp(-(agentes - carga) * 20 / aht); 
+                            if (ns >= 0.80) { requerimiento = agentes; break; }
+                        }
+                    } else if (canal === 'pchat') {
+                        // Carga de trabajo Chat (Concurrencia estimada en 4)
+                        requerimiento = Math.ceil((volumen * (aht / 60)) / (60 * 4)); // aht en segundos -> min
+                    } else if (canal === 'correo') {
+                        // Carga de trabajo Correo
+                        requerimiento = Math.ceil((volumen * (aht / 60)) / 60);
+                    }
+
+                    if(requerimiento > 0) {
+                        payload.push({
+                            fecha: fechaMeta,
+                            canal: canal,
+                            hora: horaNum,
+                            agentes_requeridos: requerimiento
+                        });
+                    }
+                });
+
+                if (payload.length === 0) return alert("No se encontraron datos válidos en el Excel.");
+
+                // Guardar en Supabase
+                const btn = event.target;
+                btn.disabled = true;
+
+                // Borrar metas anteriores de esa fecha
+                await supabaseClient.from('requerimiento_cobertura').delete().eq('fecha', fechaMeta);
+                
+                // Insertar nuevas
+                const { error } = await supabaseClient.from('requerimiento_cobertura').insert(payload);
+
+                btn.disabled = false;
+
+                if (error) {
+                    return alert("Error al guardar: " + error.message);
+                }
+
+                alert(`✅ ¡Éxito! Se importaron ${payload.length} metas para la fecha ${fechaMeta}.`);
+                cargarCobertura(); // Recargar tabla
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = ''; // Resetear input
+        }
+
+        // --- MODAL DE METAS (Manual) ---
         async function abrirModalMetas() {
             const fecha = document.getElementById('fecha-cobertura').value;
             const modal = document.getElementById('modal-metas');
@@ -946,6 +1039,72 @@
             }
             cerrarModalMetas();
             cargarCobertura();
+        }
+
+        // --- MOTOR MATEMÁTICO WFM (ERLANG C + CARGA DE TRABAJO) ---
+        function autocompletarMetasErlang() {
+            const volVozDia = parseInt(document.getElementById('calc-vol-voz').value) || 0;
+            const ahtVoz = parseInt(document.getElementById('calc-aht-voz').value) || 0;
+            const volChatDia = parseInt(document.getElementById('calc-vol-chat').value) || 0;
+            const concurrenciaChat = parseInt(document.getElementById('calc-concurrencia').value) || 1;
+            const volCorreoDia = parseInt(document.getElementById('calc-vol-correo').value) || 0;
+
+            const distribucion = [
+                0.02, 0.06, 0.10, 0.12, 0.10, 0.08, 0.04, 0.08, 0.10, 0.10, 0.08, 0.05, 0.03, 0.02, 0.01, 0.01
+            ];
+
+            function calcularErlangC(volumen, aht) {
+                if (volumen === 0) return 0;
+                const carga = (volumen * aht) / 3600;
+                for (let agentes = 1; agentes <= 100; agentes++) {
+                    if (carga >= agentes) continue;
+                    let erlangB = 0;
+                    for (let i = 1; i <= agentes; i++) {
+                        erlangB = (carga * erlangB) / (i + carga * erlangB);
+                    }
+                    const denom = agentes - carga + (agentes * carga * erlangB);
+                    const probEspera = (agentes * carga * erlangB) / denom;
+                    const ns = 1 - probEspera * Math.exp(-(agentes - carga) * 20 / aht); 
+                    if (ns >= 0.80) return agentes; 
+                }
+                return 100;
+            }
+
+            canales.forEach(canal => {
+                horasMostrar.forEach((hora, index) => {
+                    const key = `${canal}-${hora}`;
+                    const input = document.getElementById(`input-meta-${canal}-${hora}`);
+                    if (!input) return;
+
+                    let volHoraVoz = volVozDia * distribucion[index];
+                    let volHoraChat = volChatDia * distribucion[index];
+                    let volHoraCorreo = volCorreoDia * distribucion[index];
+
+                    let requerimiento = 0;
+
+                    if (canal === 'ccvox') {
+                        requerimiento = calcularErlangC(volHoraVoz, ahtVoz);
+                    } else if (canal === 'pchat') {
+                        requerimiento = Math.ceil((volHoraChat * 15) / (60 * concurrenciaChat));
+                    } else if (canal === 'correo') {
+                        requerimiento = Math.ceil((volHoraCorreo * 20) / 60);
+                    } else if (canal === 'multicanal') {
+                        requerimiento = Math.ceil((volHoraVoz * 0.1) + (volHoraChat * 0.1));
+                    }
+
+                    input.value = requerimiento;
+                    metasGlobales[key] = requerimiento;
+                });
+            });
+
+            const btn = event.target;
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = "✅ Calculado";
+            btn.classList.replace('bg-brand-dark', 'bg-green-600');
+            setTimeout(() => {
+                btn.innerHTML = textoOriginal;
+                btn.classList.replace('bg-green-600', 'bg-brand-dark');
+            }, 2000);
         }
 
         // --- LÓGICA DEL DASHBOARD Y PERSONAL ---
@@ -1448,7 +1607,6 @@
                 </div>`;
             }
 
-            // Llamar al motor de sugerencias IA
             generarSugerenciasIA();
         }
 
@@ -1604,72 +1762,7 @@
             cargarSolicitudesAdmin();
         }
 
-        // --- MOTOR MATEMÁTICO WFM (ERLANG C + CARGA DE TRABAJO) ---
-        function autocompletarMetasErlang() {
-            const volVozDia = parseInt(document.getElementById('calc-vol-voz').value) || 0;
-            const ahtVoz = parseInt(document.getElementById('calc-aht-voz').value) || 0;
-            const volChatDia = parseInt(document.getElementById('calc-vol-chat').value) || 0;
-            const concurrenciaChat = parseInt(document.getElementById('calc-concurrencia').value) || 1;
-            const volCorreoDia = parseInt(document.getElementById('calc-vol-correo').value) || 0;
-
-            const distribucion = [
-                0.02, 0.06, 0.10, 0.12, 0.10, 0.08, 0.04, 0.08, 0.10, 0.10, 0.08, 0.05, 0.03, 0.02, 0.01, 0.01
-            ];
-
-            function calcularErlangC(volumen, aht) {
-                if (volumen === 0) return 0;
-                const carga = (volumen * aht) / 3600;
-                for (let agentes = 1; agentes <= 100; agentes++) {
-                    if (carga >= agentes) continue;
-                    let erlangB = 0;
-                    for (let i = 1; i <= agentes; i++) {
-                        erlangB = (carga * erlangB) / (i + carga * erlangB);
-                    }
-                    const denom = agentes - carga + (agentes * carga * erlangB);
-                    const probEspera = (agentes * carga * erlangB) / denom;
-                    const ns = 1 - probEspera * Math.exp(-(agentes - carga) * 20 / aht); 
-                    if (ns >= 0.80) return agentes; 
-                }
-                return 100;
-            }
-
-            canales.forEach(canal => {
-                horasMostrar.forEach((hora, index) => {
-                    const key = `${canal}-${hora}`;
-                    const input = document.getElementById(`input-meta-${canal}-${hora}`);
-                    if (!input) return;
-
-                    let volHoraVoz = volVozDia * distribucion[index];
-                    let volHoraChat = volChatDia * distribucion[index];
-                    let volHoraCorreo = volCorreoDia * distribucion[index];
-
-                    let requerimiento = 0;
-
-                    if (canal === 'ccvox') {
-                        requerimiento = calcularErlangC(volHoraVoz, ahtVoz);
-                    } else if (canal === 'pchat') {
-                        requerimiento = Math.ceil((volHoraChat * 15) / (60 * concurrenciaChat));
-                    } else if (canal === 'correo') {
-                        requerimiento = Math.ceil((volHoraCorreo * 20) / 60);
-                    } else if (canal === 'multicanal') {
-                        requerimiento = Math.ceil((volHoraVoz * 0.1) + (volHoraChat * 0.1));
-                    }
-
-                    input.value = requerimiento;
-                    metasGlobales[key] = requerimiento;
-                });
-            });
-
-            const btn = event.target;
-            const textoOriginal = btn.innerHTML;
-            btn.innerHTML = "✅ Calculado";
-            btn.classList.replace('bg-brand-dark', 'bg-green-600');
-            setTimeout(() => {
-                btn.innerHTML = textoOriginal;
-                btn.classList.replace('bg-green-600', 'bg-brand-dark');
-            }, 2000);
-        }
-
+        // --- INICIALIZACIÓN ---
         function iniciarDashboard() {
             cargarDashboard();
             setInterval(cargarDashboard, 60000);
